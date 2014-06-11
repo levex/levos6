@@ -22,4 +22,6 @@ struct device {
 	void *priv; /* private data as the device pleases */
 };
 
+extern int device_register(struct device *dev);
+
 #endif

@@ -8,7 +8,7 @@ all: $(KERN_NAME)
 include arch/$(ARCH)/Makefile
 include kernel/Makefile
 include drivers/Makefile
-
+include lib/Makefile
 
 %.o: %.c
 	@echo "  CC       $@"

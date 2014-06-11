@@ -1,0 +1,1 @@
+OBJS += lib/memset.o

@@ -6,4 +6,8 @@ struct console {
 	int id; /* To be filled by the subsystem */
 };
 
+extern int console_sys_init();
+
+extern int console_send(char c);
+
 #endif /* __CONSOLE_H */
