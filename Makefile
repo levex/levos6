@@ -2,13 +2,24 @@ KERN_NAME=kernel.img
 ARCH=x86
 
 OBJS=main.o
-CFLAGS += -Iinclude
+
 all: $(KERN_NAME)
+
+start: $(KERN_NAME)
+	@echo "  QEMU     $(KERN_NAME)"
+	@$(QEMU) -kernel $(KERN_NAME) -serial stdio -hda hd.img
 
 include arch/$(ARCH)/Makefile
 include kernel/Makefile
+include mm/Makefile
 include drivers/Makefile
+include fs/Makefile
 include lib/Makefile
+
+
+CFLAGS += -Iinclude -D__LEVOS_ARCH_$(ARCH)__
+CFLAGS += -g
+
 
 %.o: %.c
 	@echo "  CC       $@"

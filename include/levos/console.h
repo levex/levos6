@@ -10,4 +10,6 @@ extern int console_sys_init();
 
 extern int console_send(char c);
 
+extern int console_register(struct console *c);
+
 #endif /* __CONSOLE_H */

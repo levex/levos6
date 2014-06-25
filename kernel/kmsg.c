@@ -2,16 +2,15 @@
 
 #define KMSG_BUFSIZE 65536
 
-static char *kmsg_buf = 0;
+static char kmsg_buf[KMSG_BUFSIZE];
 static int   kmsg_pos = 0;
 
 void __kmsg_append(char c)
 {
 	if (!c)
 		return;
-
-	console_send(c);
-	
+	if (kmsg_pos >= KMSG_BUFSIZE)
+		return;
 	kmsg_buf[kmsg_pos ++] = c;
 }
 
@@ -47,10 +46,16 @@ struct device kmsg_dev = {
 	.write = (void *)kmsg_write,
 	.read = (void *)kmsg_read,
 	.sync = kmsg_flush,
+	.name = "kmsg",
+};
+
+struct console kmsg_con = {
+	.dev = &kmsg_dev,
 };
 
 int kmsg_init()
 {
 	memset(kmsg_buf, 0, KMSG_BUFSIZE);
 	device_register(&kmsg_dev);
+	console_register(&kmsg_con);
 }
