@@ -48,6 +48,34 @@ int ext2_stat(struct filesystem *fs, char *p, struct stat *buf)
 	return 0;
 }
 
+int ext2_file_read_block(struct file *f, void *buf, size_t b)
+{
+	if (b < 0 || !f || !buf)
+		return -EINVAL;
+	
+	struct ext2_inode *inode = kmalloc(sizeof(*inode));
+	if (!inode)
+		return -ENOMEM;
+
+	int in = ext2_find_file_inode(f->fs, f->respath);
+	if (in < 0)
+		return in;
+	
+	ext2_read_inode(f->fs, inode, in);
+
+	if (b < 12) {
+		/* dbp */
+		int _b = inode->dbp[b];
+		ext2_read_block(f->fs, buf, _b);
+		new_free(inode);
+		return 0;
+	} else {
+		printk("ext2: read of fblock %d is not yet supported!\n");
+		new_free(inode);
+		return -ENOSYS;
+	}
+}
+
 int ext2_read_file(struct file *f, void *buf, size_t count)
 {
 	int inode = ext2_find_file_inode(f->fs, f->respath);
@@ -60,23 +88,24 @@ int ext2_read_file(struct file *f, void *buf, size_t count)
 	
 	ext2_read_inode(f->fs, ibuf, inode);
 	int total;
-	
+	int bs = EXT2_PRIV(f->fs)->blocksize;
+
 	/* determine how many blocks do we need */
-	int blocks = count / EXT2_PRIV(f->fs)->blocksize;
-	int off = count % EXT2_PRIV(f->fs)->blocksize;
+	int blocks = count / bs;
+	int off = count % bs;
 	int rblocks = 0; /* blocks read so far */
 
 	/* determine position */
-	int cblock = f->pos / EXT2_PRIV(f->fs)->blocksize;
-	int coff = f->pos % EXT2_PRIV(f->fs)->blocksize;
+	int cblock = f->pos / bs;
+	int coff = f->pos % bs;
+	
+	int opos = f->pos;
 
-	void *block = kmalloc(EXT2_PRIV(f->fs)->blocksize);
+	void *block = kmalloc(bs);
 	if (!block)
 		return -ENOMEM;
 
-	if (cblock < 12) ; /* TODO */
-
-	return total;
+	return f->pos - opos;
 }
 
 int ext2_write_file(struct file *f, const void *buf, size_t count)
