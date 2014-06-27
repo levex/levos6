@@ -18,11 +18,12 @@ void textmode_clear(struct device *dev)
 
 void __textmode_scrollup(struct tmpriv *p)
 {
-	for (int y = 0; y < 25; y++)
+	for (int y = 0; y < 25; y++) {
 		memcpy((void *)(0xB8000 + y*80*2),
 			(void *)(0xB8000 + (y+1)*80*2),
 			80*2);
-	memset((void *)(0xB8000 + 80*25*2), p->col << 8 | ' ', 80*2);
+	}
+	memset16((void *)(0xB8000 + 80*25*2), p->col << 8 | ' ', 80*2);
 	return;
 }
 
@@ -39,8 +40,7 @@ void __textmode_putchar(struct tmpriv *p, char c)
 	if (p->y >= 25) {
 		__textmode_scrollup(p);
 		p->x = 0;
-		//p->y --;
-		p->y = 0;
+		p->y --;
 	}
 
 	if (c == '\n')

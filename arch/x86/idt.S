@@ -3,9 +3,9 @@
 _idt_load:
 	push %ebp
 	movl %esp, %ebp
-	
+
 	lidt _idtr
-	
+
 	movl %ebp, %esp
 	pop %ebp
 	ret

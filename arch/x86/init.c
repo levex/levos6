@@ -34,5 +34,8 @@ int arch_early_init()
 
 int arch_late_init()
 {
-	return -ENOSYS;
+	int rc = 0;
+	rc = pit_init();
+	if (rc)
+		return rc;
 }

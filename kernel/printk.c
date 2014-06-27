@@ -71,6 +71,7 @@ void printk_ticks()
 	int i;
 	char str[32] = {0};
 	vprintk("[", NULL);
+	sched_ticks = arch_get_ticks();
 	itoa(sched_ticks, 10, str);
 	for (i = strlen(str); i < 6; i++)
 		vprintk("0", NULL);

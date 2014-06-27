@@ -18,6 +18,8 @@ extern int arch_early_init();
  */
 extern int arch_late_init();
 
+extern uint32_t arch_get_ticks();
+
 extern void arch_do_mboot();
 
 void switch_page_dir(page_dir_t *p);

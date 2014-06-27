@@ -48,8 +48,44 @@ int ext2_stat(struct filesystem *fs, char *p, struct stat *buf)
 	return 0;
 }
 
+int ext2_file_read_block(struct file *f, void *buf, size_t b)
+{
+	struct filesystem *fs = f->fs;
+	struct ext2_inode *ibuf = kmalloc(sizeof(*ibuf));
+	int ino = ext2_find_file_inode(fs, f->respath);
+	int bs = EXT2_PRIV(fs)->blocksize;
+	if (ino < 0)
+		return ino;
+
+	ext2_read_inode(fs, ibuf, ino);
+
+	if (b < 12) {
+		ext2_read_block(fs, buf, ibuf->dbp[b]);
+	} else {
+		if (b < bs / sizeof(uint32_t)) {
+			uint32_t *bb = kmalloc(bs);
+			ext2_read_block(f->fs, bb, ibuf->singly_block);
+			uint32_t b = bb[b - 12];
+			ext2_read_block(f->fs, buf, b);
+			new_free(bb);
+			goto exit;
+		}
+		printk("File blocks >+%d arent supported\n", bs / sizeof(uint32_t));
+		return -ENOSYS;
+	}
+	
+exit:	new_free(ibuf);
+	return 0;
+}
+
 int ext2_read_file(struct file *f, void *buf, size_t count)
 {
+	if (!count)
+		return 0;
+
+	if (!f || !buf)
+		return -EINVAL;
+	
 	int inode = ext2_find_file_inode(f->fs, f->respath);
 	if (inode < 0)
 		return inode;
@@ -60,23 +96,32 @@ int ext2_read_file(struct file *f, void *buf, size_t count)
 	
 	ext2_read_inode(f->fs, ibuf, inode);
 	int total;
-	
+	int bs = EXT2_PRIV(f->fs)->blocksize;
+
 	/* determine how many blocks do we need */
-	int blocks = count / EXT2_PRIV(f->fs)->blocksize;
-	int off = count % EXT2_PRIV(f->fs)->blocksize;
+	int blocks = count / bs;
+	int off = count % bs;
 	int rblocks = 0; /* blocks read so far */
 
 	/* determine position */
-	int cblock = f->pos / EXT2_PRIV(f->fs)->blocksize;
-	int coff = f->pos % EXT2_PRIV(f->fs)->blocksize;
+	int cblock = f->pos / bs;
+	int coff = f->pos % bs;
 
-	void *block = kmalloc(EXT2_PRIV(f->fs)->blocksize);
+	void *block = kmalloc(bs * (blocks + 1));
 	if (!block)
 		return -ENOMEM;
 
-	if (cblock < 12) ; /* TODO */
+	/* contignous reading .... @TODO */
+	ext2_file_read_block(f, block, cblock);
+	for (int i = 0; i < blocks; i++)
+		ext2_file_read_block(f, block + (i + 1) * bs, cblock + i + 1);
+	
+	/* now read the bytes */
+	memcpy(buf, block + (f->pos - cblock * bs), count);
 
-	return total;
+	f->pos += count;
+	
+	return count;
 }
 
 int ext2_write_file(struct file *f, const void *buf, size_t count)

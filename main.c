@@ -46,6 +46,7 @@ void start_init()
 		printk("test: failed to read from file %s\n", p);
 		return;
 	}
+	printk("test: contents: %s", buffer);
 }
 
 void do_mount() {

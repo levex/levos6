@@ -25,8 +25,11 @@ void idt_set_int(uint8_t n, void(*base)(void), uint16_t sel, uint8_t flags)
 	idt[n].sel = sel;
 	idt[n].nil = 0;
 	idt[n].flags = flags | 0x60;
+}
 
-	printk("x86: idt: set desc %d\n", n);
+void idt_noop_irq() {
+	printk("A no-op IRQ has happened.\n");
+	asm volatile("iretl");
 }
 
 int idt_init()
@@ -34,10 +37,12 @@ int idt_init()
 	_idtr.limit = (sizeof(struct idt_e) * 256) - 1;
 	_idtr.base = (uintptr_t)&idt;
 
-	memset(&idt, 0, sizeof(struct idt_e) * 256);
+	for (int i = 0; i < 256; i++)
+		idt_set_int(i, idt_noop_irq, 0x08, 0x8E);
+
 	_idt_load();
 
 	printk("x86: idt: %s done\n", __func__);
-	
+	asm volatile("sti");
 	return 0;
 }
