@@ -19,7 +19,7 @@ int drivers_init()
 void start_init()
 {
 	/* try /bin/sh */
-	char *p = "/bin/sh";
+	char *p = "/levex.txt";
 	printk("test: trying to find inode of %s\n", p);
 	int i = ext2_find_file_inode(__get__fs());
 	if (i < 0) {
