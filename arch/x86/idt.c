@@ -43,6 +43,6 @@ int idt_init()
 	_idt_load();
 
 	printk("x86: idt: %s done\n", __func__);
-	asm volatile("sti");
+//	asm volatile("sti");
 	return 0;
 }
