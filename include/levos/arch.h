@@ -25,6 +25,7 @@ extern void arch_do_mboot();
 void switch_page_dir(page_dir_t *p);
 
 extern void irq_set(size_t n, void (*h)(void));
+extern void send_eoi();
 
 uint8_t inportb(uint16_t p);
 uint16_t inportw(uint16_t p);

@@ -6,12 +6,12 @@ struct idt_e {
 	uint8_t nil;
 	uint8_t flags;
 	uint16_t base_high;
-};
+} __attribute__((packed));
 
 struct idtr {
 	uint16_t limit;
 	uintptr_t base;
-};
+} __attribute__((packed));
 
 static struct idt_e idt[256];
 struct idtr _idtr;
@@ -28,7 +28,6 @@ void idt_set_int(uint8_t n, void(*base)(void), uint16_t sel, uint8_t flags)
 }
 
 void idt_noop_irq() {
-	printk("A no-op IRQ has happened.\n");
 	asm volatile("iretl");
 }
 
@@ -43,6 +42,8 @@ int idt_init()
 	_idt_load();
 
 	printk("x86: idt: %s done\n", __func__);
-//	asm volatile("sti");
+	printk("sys: enabling IRQs\n");
+	asm volatile("sti");
+	printk("sys: IRQs were enabled we seem to be OK\n");
 	return 0;
 }

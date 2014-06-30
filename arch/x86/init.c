@@ -17,15 +17,23 @@ int arch_early_init()
 	if (rc)
 		return rc;
 
-	rc = idt_init();
-	if (rc)
-		return rc;
-
 	rc = gdt_init();
 	if (rc)
 		return rc;
 
+	rc = idt_init();
+	if (rc)
+		return rc;
+
+	rc = exceptions_init();
+	if (rc)
+		return rc;
+
 	rc = irq_init();
+	if (rc)
+		return rc;
+
+	rc = pit_init();
 	if (rc)
 		return rc;
 
@@ -34,8 +42,5 @@ int arch_early_init()
 
 int arch_late_init()
 {
-	int rc = 0;
-	rc = pit_init();
-	if (rc)
-		return rc;
+	return 0;
 }

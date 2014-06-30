@@ -110,7 +110,6 @@ void paging_fini()
 	for (uintptr_t i = 0xB8000; i < 0xC0000; i += 0x1000) {
 		alloc_dma_frame(get_page(i, 0, kernel_dir), 0, 1, i);
 	}
-	irq_set(14, page_fault);
 	kernel_dir->phy_addr = (uint32_t)kernel_dir->phy_tables;
 
 	uintptr_t hs = KHEAP_START;

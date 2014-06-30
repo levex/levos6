@@ -1,4 +1,4 @@
-.set ALIGN,    1<<0             
+.set ALIGN,    1<<1             
 .set MEMINFO,  1<<1            
 .set FLAGS,    ALIGN | MEMINFO  
 .set MAGIC,    0x1BADB002       
@@ -14,7 +14,7 @@
 .section .bootstrap_stack
 stack_bottom:
 .align 4
-.skip 32768 # 16 KiB
+.skip 65536 # 16 KiB
 stack_top:
 
 .section .text
@@ -23,7 +23,7 @@ stack_top:
 .type _start, @function
 _start:
 
-	movl $stack_top, %esp
+	movl $stack_bottom, %esp
 	mov $0x1337, %eax
 	push %ebx
 	call main

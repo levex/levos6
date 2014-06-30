@@ -19,6 +19,19 @@ void irq_remap()
 	outportb(0xA1, 0x0);
 }
 
+int8_t current_irq = -1;
+
+void send_eoi()
+{
+	if (current_irq < 0)
+		panic("Invalid IRQ context!\n");
+	if (current_irq > 8)
+		outportb(0xA0, 0x20);
+
+	outportb(0x20, 0x20);
+	return;
+}
+
 int irq_init()
 {
 	irq_remap();	

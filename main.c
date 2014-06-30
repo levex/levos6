@@ -14,6 +14,8 @@ int drivers_init()
 	DRIVER_INIT(vfs_init);
 	DRIVER_INIT(tty_init);
 	DRIVER_INIT(ata_init);
+
+	return 0;
 }
 
 void start_init()
@@ -57,6 +59,9 @@ void do_mount() {
 		panic("unable to mount root directory\n");
 }
 
+extern int kernel_end;
+extern int kernel_base;
+
 void main(struct multiboot *mboot) {
 
 	int rc;
@@ -70,6 +75,10 @@ void main(struct multiboot *mboot) {
 
 	printk("kmsg: buffer setup!\n");
 
+	printk("sys: kernel relocation: 0x%x -> 0x%x  size 0x%x\n",
+		&kernel_base, &kernel_end, 
+		(uint32_t)&kernel_end - (uint32_t)&kernel_base);
+
 	parse_multiboot(mboot);
 	
 	paging_fini();
@@ -82,7 +91,7 @@ void main(struct multiboot *mboot) {
 	printk("sys: init done!\n");
 
 	drivers_init();
-
+	
 	do_mount();
 	start_init();
 

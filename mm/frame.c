@@ -73,7 +73,6 @@ extern page_t *get_page(uintptr_t addr, int make, page_dir_t *d);
 uintptr_t mm_alloc_pages(int n)
 {
 	uint32_t addr = first_n_frames(n) * 0x1000;
-	printk("%s: n=%d addr=0x%x\n", __func__, n, addr);
 	for (uint32_t i = addr; i < addr + n * 0x1000; i += 0x1000) {
 		if (test_frame(i))
 			panic("first_n_frames is broken\n");

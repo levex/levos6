@@ -96,25 +96,26 @@ int ata_sync(struct device *dev)
 	return -ENOSYS;
 }
 
-int ide_identify(int bus, int drive)
+int ide_identify()
 {
 	uint16_t io = 0;
-	ide_select_drive(bus, drive);
-	io = (bus == ATA_PRIMARY) ? ATA_PRIMARY_IO : ATA_SECONDARY_IO;
-
+//	ide_select_drive(0, 0);
+//	io = (bus == ATA_PRIMARY) ? ATA_PRIMARY_IO : ATA_SECONDARY_IO;
+	io = 0x1F0;
+	outportb(ATA_PRIMARY_IO + ATA_REG_HDDEVSEL, 0xA0);
 	outportb(io + ATA_REG_SECCOUNT0, 0);
 	outportb(io + ATA_REG_LBA0, 0);
 	outportb(io + ATA_REG_LBA1, 0);
 	outportb(io + ATA_REG_LBA2, 0);
-
 	outportb(io + ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
-	printk("ata: send identify to bus %d drive %d\n", bus, drive);
 
 	uint8_t status = inportb(io + ATA_REG_STATUS);
 	if (status)
 	{
 		/* read the IDENTIFY data */
 		void *ide_buf = kmalloc(512);
+		if (!ide_buf)
+			return -ENOMEM;
 		for (int i = 0; i < 256; i++)
 			*(uint16_t *)(ide_buf + i*2) = inportw(io + ATA_REG_DATA);
 		new_free(ide_buf);
@@ -129,7 +130,7 @@ int ide_identify(int bus, int drive)
 		device_register(dev);
 		return 1;
 	} else {
-		printk("ata: ERROR: IDENTIFY on b%dd%d -> no status\n");
+		printk("ata: IDENTIFY error on b0d0 -> no status\n");
 		return 0;
 	}
 }
@@ -137,7 +138,7 @@ int ide_identify(int bus, int drive)
 int ata_probe()
 {
 	int devs = 0;
-	if (ide_identify(ATA_PRIMARY, ATA_MASTER) > 0) {
+	if (ide_identify() > 0) {
 		printk("ata: primary master is online\n");
 		devs ++;
 	}
@@ -152,7 +153,7 @@ void ide_prim_irq()
 
 int ata_init()
 {
-	int rc;
+	int rc = 0;
 
 	printk("ata: using IDE mode, disregarding secondary\n");
 	irq_set(0x20 + ATA_PRIMARY_IRQ, ide_prim_irq);

@@ -31,10 +31,10 @@
 
 uint32_t __pit_ticks = 0;
 
-void pit_irq()
+DEF_IRQ_HANDLER(0, pit_irq)
 {
 	__pit_ticks ++;
-	asm volatile("iret");
+	return;
 }
 
 static inline void __pit_send_cmd(uint8_t cmd)
@@ -84,8 +84,7 @@ uint32_t arch_get_ticks()
 int pit_init()
 {
         irq_set(32, pit_irq);
-        pit_start_counter (200,PIT_OCW_COUNTER_0, PIT_OCW_MODE_SQUAREWAVEGEN);
+        pit_start_counter (2000,PIT_OCW_COUNTER_0, PIT_OCW_MODE_SQUAREWAVEGEN);
 	printk("x86: pit: clocksource registered\n");
-//	asm volatile("sti");
         return 0;
 }

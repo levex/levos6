@@ -17,7 +17,8 @@ uint16_t inportw(uint16_t p)
 
 void outportb(uint16_t portid, uint8_t value)
 {
-	asm volatile("outb %%al, %%dx": :"d"(portid), "a"(value));
+	asm volatile("outb %%al, %%dx"::
+			"d"(portid), "a"(value));
 }
 
 extern page_dir_t *current_directory;
