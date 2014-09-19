@@ -146,7 +146,7 @@ int ata_probe()
 	return 0;
 }
 
-void ide_prim_irq()
+DEF_IRQ_HANDLER(0x20, ide_prim_irq)
 {
 	return;
 }
