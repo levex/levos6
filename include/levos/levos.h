@@ -20,6 +20,6 @@
 #include <levos/mm.h>
 #include <levos/vfs.h>
 #include <levos/ext2.h>
-
+#include <levos/sched.h>
 
 #endif /* __LEVOS_H */

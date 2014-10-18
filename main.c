@@ -18,7 +18,7 @@ int drivers_init()
 	return 0;
 }
 
-void start_init()
+void do_test()
 {
 	/* try /bin/sh */
 	char *p = "/levex.txt";
@@ -59,6 +59,15 @@ void do_mount() {
 		panic("unable to mount root directory\n");
 }
 
+void start_sched()
+{
+	int rc = sched_init();
+	if (rc)
+		return;
+	
+	sched_start_idle();
+}
+
 extern int kernel_end;
 extern int kernel_base;
 
@@ -93,8 +102,13 @@ void main(struct multiboot *mboot) {
 	drivers_init();
 	
 	do_mount();
-	start_init();
+	do_test();
 
 	/* wait forever */
-	panic("finished with main, but no init was started!\n");
+	asm volatile("mov $0x1337, %eax");
+	asm volatile("mov $0x1337, %ebx");
+	asm volatile("mov $0x1337, %ecx");
+	asm volatile("mov $0x1337, %edx");
+	start_sched();
+	panic("finished with main, but no idle task was started\n");
 }

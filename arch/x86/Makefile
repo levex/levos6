@@ -17,3 +17,4 @@ OBJS += arch/x86/exception.o
 OBJS += arch/x86/irq.o
 OBJS += arch/x86/multiboot.o
 OBJS += arch/x86/pit.o
+OBJS += arch/x86/sched.o

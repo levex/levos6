@@ -20,6 +20,7 @@ void irq_remap()
 }
 
 int8_t current_irq = -1;
+uint32_t pre_irq_esp = 0;
 
 void send_eoi()
 {

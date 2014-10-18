@@ -1,5 +1,15 @@
 #include <stdint.h>
 
+void memcpy32(uint32_t *dest, uint32_t *src, uint32_t count)
+{
+	uint32_t* dst32 = (uint32_t*)dest;
+	uint32_t* src32 = (uint32_t *)src;
+
+	for (int i = 0; i < count; i++)
+		*dst32 ++ = *src32 ++;
+
+}
+
 void memcpy(uint8_t *dest, uint8_t *src, uint32_t count)
 {
 	char* dst8 = (char*)dest;
