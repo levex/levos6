@@ -4,9 +4,12 @@
 struct process {
 	char *comm;
 	int pid;
+	int time_used;
 	/* Architecture-specific */
 	struct pt_regs r;
 };
+
+#define MAX_PROC_TIME 10
 
 /* Setup scheduler */
 extern int sched_init();

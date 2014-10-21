@@ -84,6 +84,7 @@ struct process *sched_mk_process(char *comm, uint32_t entry)
 		return -ENOMEM;
 
 	p->comm = comm;
+	p->time_used = 0;
 	p->pid = global_pid ++;
 	arch_sched_mk_initial_regs(&p->r);
 	INS_PTR(&p->r) = entry;
@@ -156,6 +157,11 @@ void sched_schedule()
 	 */
 	if (current) {
 		struct pt_regs *irq_regs = GRAB_PRE_IRQ_REGS();
+
+		current->time_used ++;
+		if (current->time_used < MAX_PROC_TIME)
+			return;
+
 //		DUMP_REGISTERS(irq_regs);
 //		DUMP_AREA_AT(pre_irq_esp, 12);
 		if (irq_regs->magic != 0x13371337) {
@@ -167,6 +173,7 @@ void sched_schedule()
 
 	/* select next process */
 	current = sched_select();
+	current->time_used = 0;
 //	printk("next process: %d\n", current->pid);
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
