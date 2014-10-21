@@ -167,7 +167,7 @@ void sched_schedule()
 
 	/* select next process */
 	current = sched_select();
-	printk("next process: %d\n", current->pid);
+//	printk("next process: %d\n", current->pid);
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
 }
