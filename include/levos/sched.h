@@ -5,9 +5,19 @@ struct process {
 	char *comm;
 	int pid;
 	int time_used;
+	int state;
+
 	/* Architecture-specific */
 	struct pt_regs r;
 };
+
+#define PROCESS_NULL 		0 /* process was never in sched queue */
+#define PROCESS_RUNNING 	1 /* process is running at the moment */
+#define PROCESS_PREEMPTED 	2 /* process was preempted and waits for its time */
+#define PROCESS_READY 		3 /* process is ready to scheduled to for the first time */
+#define PROCESS_ZOMBIE 		4 /* process was killed and awaits removal from queue */
+#define PROCESS_REMOVED 	5 /* process is no longer is sched queue */
+
 
 #define MAX_PROC_TIME 10
 

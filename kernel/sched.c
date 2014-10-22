@@ -52,6 +52,7 @@ int sched_add_process(struct process *p)
 	sched_current_processes ++;
 	printk("sched: process \"%s\" added as PID %d (proc_queue_pos=%d)\n",
 		p->comm, p->pid, i);
+	p->state = PROCESS_READY;
 	sched_sync();
 	return 0;
 }
@@ -86,6 +87,7 @@ struct process *sched_mk_process(char *comm, uint32_t entry)
 	p->comm = comm;
 	p->time_used = 0;
 	p->pid = global_pid ++;
+	p->state = PROCESS_NULL;
 	arch_sched_mk_initial_regs(&p->r);
 	INS_PTR(&p->r) = entry;
 	int r = sched_create_stack(p);
@@ -168,12 +170,14 @@ void sched_schedule()
 			panic("Wrong IRQ register magic! Stack corrupted!\n");
 		}
 		memcpy(&current->r, irq_regs, sizeof(struct pt_regs));
+		current->state = PROCESS_PREEMPTED;
 //		printk("debug: ESP 0x%x EIP 0x%x\n", STACK_PTR(irq_regs), INS_PTR(irq_regs));
 	} else panic("Scheduler has no current process\n");
 
 	/* select next process */
 	current = sched_select();
 	current->time_used = 0;
+	current->state = PROCESS_RUNNING;
 //	printk("next process: %d\n", current->pid);
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
