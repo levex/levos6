@@ -101,6 +101,41 @@ struct process *sched_mk_process(char *comm, uint32_t entry)
 	return p;
 }
 
+struct process *get_process_by_pid(int pid)
+{
+	for (int i = 0; i < PROC_QUEUE_SIZE; i++) {
+		if (!process_queue[i])
+			continue;
+		if (process_queue[i]->pid == pid)
+			return process_queue[i];
+	}
+	return 0;
+}
+
+int sched_destroy_pid(int pid)
+{
+	struct process *p = get_process_by_pid(pid);
+	if (!p)
+		return -EINVAL;
+
+	/* a running process cannot be destroyed */
+	if (p->state == PROCESS_RUNNING)
+		return -EAGAIN;
+
+	return sched_destroy_process(p);
+}
+
+int sched_destroy_process(struct process *p)
+{
+	/* p->comm is not free'd, since we doN't know if
+	 * it was actually allocated by liballoc or is it just
+	 * a plain .data string...
+	 */
+	mm_free_pages(PROCESS_STACK_GET(p), 1);
+	new_free(p);
+	return 0;
+}
+
 struct process *sched_select()
 {
 	struct process *next;
