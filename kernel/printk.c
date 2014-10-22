@@ -56,6 +56,9 @@ void vprintk(char *fmt, va_list ap)
 void panic(char *fmt, ...)
 {
 	va_list ap;
+	
+	DISABLE_IRQ();
+
 	va_start(ap, fmt);
 
 	printk("Kernel panic: ");

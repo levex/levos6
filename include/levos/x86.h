@@ -74,6 +74,9 @@ extern struct pt_regs __x86_pre_irq_regs;
 
 #define ARCH_VOLUNTEER_SCHEDULE() asm volatile("int $0x2F");
 
+#define ENABLE_IRQ()  asm volatile("sti");
+#define DISABLE_IRQ() asm volatile("cli");
+
 #define DEF_IRQ_HANDLER(n, name) asm (			\
 		#name ":\n"              	  	\
 		"	mov %esp, pre_pushal_esp \n"	\
