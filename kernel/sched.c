@@ -169,7 +169,6 @@ void idle2_task()
 		printk("2\n");
 }
 
-
 void sched_start_idle()
 {
 	printk("sched: starting idle task\n");
@@ -199,21 +198,17 @@ void sched_schedule()
 		if (current->time_used < MAX_PROC_TIME)
 			return;
 
-//		DUMP_REGISTERS(irq_regs);
-//		DUMP_AREA_AT(pre_irq_esp, 12);
 		if (irq_regs->magic != 0x13371337) {
 			panic("Wrong IRQ register magic! Stack corrupted!\n");
 		}
 		memcpy(&current->r, irq_regs, sizeof(struct pt_regs));
 		current->state = PROCESS_PREEMPTED;
-//		printk("debug: ESP 0x%x EIP 0x%x\n", STACK_PTR(irq_regs), INS_PTR(irq_regs));
 	} else panic("Scheduler has no current process\n");
 
 	/* select next process */
 	current = sched_select();
 	current->time_used = 0;
 	current->state = PROCESS_RUNNING;
-//	printk("next process: %d\n", current->pid);
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
 }
