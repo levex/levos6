@@ -7,6 +7,9 @@ struct process {
 	int time_used;
 	int state;
 
+	struct device *stdin;
+	struct device *stdout;
+
 	/* Architecture-specific */
 	struct pt_regs r;
 };
