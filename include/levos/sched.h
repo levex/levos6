@@ -33,4 +33,6 @@ extern int sched_add_process(struct process *p);
 /* Create a bare process structure */
 extern struct process *sched_mk_process(char *comm, uint32_t entry);
 
+extern void sched_schedule();
+
 #endif /* __SCHED_H */

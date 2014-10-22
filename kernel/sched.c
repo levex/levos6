@@ -158,15 +158,30 @@ void idle_task()
 	sched_online = 1;
 	can_schedule = 1;
 	printk("idle: idling...\n");
-	while(1) {
-		printk("1\n");
-	}
+	while(1)
+		schedule_noirq();
 }
 
-void idle2_task()
+void kinit_task()
 {
-	while (1)
-		printk("2\n");
+	printk("kinit: setting up userspace\n");
+	panic("well, that's messed up\n");
+}
+
+void schedule_noirq()
+{
+	current->time_used = MAX_PROC_TIME;
+	ARCH_VOLUNTEER_SCHEDULE();
+}
+
+DEF_IRQ_HANDLER(0x2F, __post_schedule_noirq)
+{
+	sched_schedule();
+}
+
+void post_schedule_noirq()
+{
+	__post_schedule_noirq();
 }
 
 void sched_start_idle()
@@ -175,8 +190,8 @@ void sched_start_idle()
 	struct process *idle = sched_mk_process("idle", idle_task);
 	sched_add_process(idle);
 	current = idle;
-	struct process *idle2 = sched_mk_process("idle2", idle2_task);
-	sched_add_process(idle2);
+	struct process *kinit = sched_mk_process("kinit", kinit_task);
+	sched_add_process(kinit);
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
 }

@@ -31,6 +31,7 @@ void idt_noop_irq() {
 	asm volatile("iretl");
 }
 
+extern void post_schedule_noirq();
 int idt_init()
 {
 	_idtr.limit = (sizeof(struct idt_e) * 256) - 1;
@@ -39,6 +40,8 @@ int idt_init()
 	for (int i = 0; i < 256; i++)
 		idt_set_int(i, idt_noop_irq, 0x08, 0x8E);
 
+	idt_set_int(0x2F, post_schedule_noirq, 0x08, 0x8E);
+	
 	_idt_load();
 
 	printk("x86: idt: %s done\n", __func__);
