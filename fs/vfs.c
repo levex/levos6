@@ -11,6 +11,11 @@ struct filesystem *filesystems[8];
 int nfilesystems = 0;
 
 
+/*
+ * __check_mounts - Checks whether a path is already mounted
+ *
+ * @internal
+ */
 struct mount *__check_mounts(char *str)
 {
 	for (int i = 0; i < nmounts; i++)
@@ -20,6 +25,12 @@ struct mount *__check_mounts(char *str)
 	return 0;
 }
 
+/* 
+ * __vfs_set_mount - Sets path to be mounted as a particular
+ * filesystem on the device
+ *
+ * @internal
+ */
 int __vfs_set_mount(char *p, struct device *dev, struct filesystem *fs)
 {
 	struct mount *m = kmalloc(sizeof(*m));
@@ -34,6 +45,10 @@ int __vfs_set_mount(char *p, struct device *dev, struct filesystem *fs)
 	return 0;
 }
 
+/*
+ * find_mount - Finds the internal mount structure for
+ * a particular path
+ */
 struct mount *find_mount(char *path)
 {
 	struct mount *ret = root_mount;
@@ -58,6 +73,15 @@ out:
 	return ret;
 }
 
+/*
+ * vfs_mount_fs - Finds a filesystem that is willing to be
+ * mounted on this particular device.
+ *
+ * WARNING: Filesystem will do its mounting on the device,
+ * possibly even modify it!
+ *
+ * @internal
+ */
 struct filesystem *vfs_mount_fs(struct device *dev)
 {
 	struct filesystem *fs = 0;
@@ -72,6 +96,12 @@ struct filesystem *vfs_mount_fs(struct device *dev)
 	return 0;
 }
 
+/*
+ * vfs_mount - Mount a device on a path
+ * 
+ * BUG: allows potential 'floating' mounts
+ *
+ */
 int vfs_mount(char *path, struct device *dev)
 {
 	if (!root_mount && strcmp("/", path) != 0)
@@ -84,11 +114,19 @@ int vfs_mount(char *path, struct device *dev)
 	return __vfs_set_mount(path, dev, fs);
 }
 
+/*
+ * vfs_root_mounted - Returns whether root directory was mounted
+ * or not
+ */
 int vfs_root_mounted()
 {
 	return (root_mount)?1:0;
 }
 
+/*
+ * register_fs - Register a filesystem so that it can later probe and
+ * mounted on devices.
+ */
 int register_fs(struct filesystem *fs)
 {
 	if (!fs)
@@ -100,13 +138,18 @@ int register_fs(struct filesystem *fs)
 	return 0;
 }
 
-
+/*
+ * vfs_open - backend for FS-related open(2)
+ */
 struct file *vfs_open(char *path)
 {
 	struct mount *m = find_mount(path);
 	return m->fs->open(m->fs, path);
 }
 
+/*
+ * vfs_stat - backend for FS-related stat(2)
+ */
 int vfs_stat(char *p, struct stat *buf)
 {
 	struct mount *m = find_mount(p);
@@ -121,6 +164,9 @@ int vfs_stat(char *p, struct stat *buf)
 	return m->fs->stat(m->fs, p, buf);
 }
 
+/*
+ * vfs_init - Initialize the Virtual Filesystem Layer
+ */
 int vfs_init()
 {
 	printk("vfs: loading filesystems\n");
