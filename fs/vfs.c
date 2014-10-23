@@ -36,19 +36,26 @@ int __vfs_set_mount(char *p, struct device *dev, struct filesystem *fs)
 
 struct mount *find_mount(char *path)
 {
+	struct mount *ret = root_mount;
+	char *str;
+
 	/* create a copy of the string */
-	char *str = kmalloc(strlen(path) + 1);
+	str = kmalloc(strlen(path) + 1);
 	memcpy(str, path, strlen(path) + 1);
 	if (strcmp(str, "/") == 0)
-		return root_mount;
+		goto out;
 	
 	while (strlen(str) > 1) {
-		struct mount *m = __check_mounts(str);
-		if (m)
-			return m;
+		ret = __check_mounts(str);
+		if (ret)
+			goto out;
 		str[strlen(str) - 1] = 0;
 	}
-	return root_mount;
+
+	ret = root_mount;
+out:
+	new_free(str);
+	return ret;
 }
 
 struct filesystem *vfs_mount_fs(struct device *dev)
