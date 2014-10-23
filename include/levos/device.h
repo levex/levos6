@@ -3,11 +3,12 @@
 
 #include <levos/levos.h>
 
-#define DEV_TYPE_PSEUDO 0
-#define DEV_TYPE_ISA    1
-#define DEV_TYPE_PCI    2
-#define DEV_TYPE_TTY    3
-#define DEV_TYPE_BLK    4
+#define DEV_TYPE_PSEUDO 	0
+#define DEV_TYPE_ISA    	1
+#define DEV_TYPE_PCI    	2
+#define DEV_TYPE_TTY    	3
+#define DEV_TYPE_BLK    	4
+#define DEV_TYPE_TTY_INPUT 	5
 
 struct device {
 	char *name; /* name of the device as in devfs */
