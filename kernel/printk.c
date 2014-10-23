@@ -46,6 +46,12 @@ void vprintk(char *fmt, va_list ap)
 					i++;
 					break;
 				}
+				case 'c': {
+					char c = (char)(va_arg(ap, int) & ~0xFFFFFF00);
+					__printk_emit(c);
+					i ++;
+					break;
+				}
 			}
 		} else {
 			__printk_emit(fmt[i]);
