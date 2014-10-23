@@ -19,12 +19,12 @@ void irq_remap()
 	outportb(0xA1, 0x0);
 }
 
-int8_t current_irq = -1;
+uint8_t current_irq = 0xFF;
 uint32_t pre_irq_esp = 0;
 
 void send_eoi()
 {
-	if (current_irq < 0)
+	if (current_irq == 0xFF)
 		panic("Invalid IRQ context!\n");
 	if (current_irq > 8)
 		outportb(0xA0, 0x20);

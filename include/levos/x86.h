@@ -53,6 +53,13 @@ extern struct pt_regs __x86_pre_irq_regs;
 
 #define INS_PTR(r) ((r)->eip)
 #define STACK_PTR(r) ((r)->esp)
+#define SYSCALL_NUMBER(r) ((r)->eax)
+#define SYSCALL_ARG1(r) ((r)->ebx)
+#define SYSCALL_ARG2(r) ((r)->ecx)
+#define SYSCALL_ARG3(r) ((r)->edx)
+#define SYSCALL_ARG4(r) ((r)->esi)
+#define SYSCALL_ARG5(r) ((r)->edi)
+#define SYSCALL_RETVAL(r) ((r)->eax)
 
 #define DUMP_REGISTERS(r) do { \
 				printk("\nEAX 0x%x EBX 0x%x ECX 0x%x\n" \

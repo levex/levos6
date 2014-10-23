@@ -164,7 +164,17 @@ void idle_task()
 
 void kinit_task()
 {
+	int ret;
 	printk("kinit: setting up userspace\n");
+	asm volatile("mov $0x01, %%eax\n"
+			"int $0x80\n"
+			"mov %%eax, %0":"=r"(ret)::"eax");
+	printk("ret = 0x%x\n", ret);
+	asm volatile("mov $0x00, %%eax\n"
+			"int $0x80\n"
+			"mov %%eax, %0":"=r"(ret)::"eax");
+	printk("ret = 0x%x\n", ret);
+	while(1) schedule_noirq();
 	panic("well, that's messed up\n");
 }
 
@@ -212,11 +222,7 @@ void sched_schedule()
 		current->time_used ++;
 		if (current->time_used < MAX_PROC_TIME)
 			return;
-
-		if (irq_regs->magic != 0x13371337) {
-			panic("Wrong IRQ register magic! Stack corrupted!\n");
-		}
-		memcpy(&current->r, irq_regs, sizeof(struct pt_regs));
+		
 		current->state = PROCESS_PREEMPTED;
 	} else panic("Scheduler has no current process\n");
 

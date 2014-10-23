@@ -14,6 +14,8 @@ struct process {
 	struct pt_regs r;
 };
 
+extern struct process *current;
+
 #define PROCESS_NULL 		0 /* process was never in sched queue */
 #define PROCESS_RUNNING 	1 /* process is running at the moment */
 #define PROCESS_PREEMPTED 	2 /* process was preempted and waits for its time */

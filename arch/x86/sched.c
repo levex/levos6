@@ -12,6 +12,11 @@ void save_pre_irq_regs()
 		pre_irq_esp,
 		sizeof(struct pt_regs));
 	__x86_pre_irq_regs.esp = pre_pushal_esp + 12;
+	
+	if (__x86_pre_irq_regs.magic != 0x13371337)
+		panic("Wrong IRQ register magic! Stack corrupted!\n");
+	if (current)
+		memcpy(&current->r, &__x86_pre_irq_regs, sizeof(struct pt_regs));
 }
 
 void arch_sched_setup_stack(struct process *p)

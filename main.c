@@ -104,7 +104,7 @@ void main(struct multiboot *mboot) {
 	
 	do_mount();
 	do_test();
-
+	syscall_init();
 	/* wait forever */
 	asm volatile("mov $0x1337, %eax");
 	asm volatile("mov $0x1337, %ebx");
