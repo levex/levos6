@@ -14,6 +14,7 @@ int drivers_init()
 	DRIVER_INIT(vfs_init);
 	DRIVER_INIT(tty_init);
 	DRIVER_INIT(ata_init);
+	DRIVER_INIT(keyboard_init);
 
 	return 0;
 }
