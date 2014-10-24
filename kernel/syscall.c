@@ -23,7 +23,7 @@ void *syscalls[256] = {
 
 DEF_IRQ_HANDLER(0x80, syscall_hub)
 {
-	struct pt_regs *r = GRAB_PRE_IRQ_REGS();
+	struct pt_regs *r = &current->r;
 	int (*f)(struct pt_regs *);
 
 	printk("Process \"%s\" called system call %d\n",
