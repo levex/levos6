@@ -40,6 +40,10 @@ DEF_IRQ_HANDLER(0x80, syscall_hub)
 
 int syscall_init()
 {
+	for (int i = 0; i < 256; i++)
+		if (syscalls[i])
+			num_syscalls ++;
+
 	printk("syscall: there are %d system calls\n", num_syscalls);
 	irq_set(0x80, syscall_hub);	
 }
