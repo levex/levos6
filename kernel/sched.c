@@ -158,6 +158,7 @@ void idle_task()
 	sched_online = 1;
 	can_schedule = 1;
 	printk("idle: idling...\n");
+	ENABLE_IRQ();
 	while(1)
 		schedule_noirq();
 }
@@ -202,6 +203,7 @@ void sched_start_idle()
 	current = idle;
 	struct process *kinit = sched_mk_process("kinit", kinit_task);
 	sched_add_process(kinit);
+	DISABLE_IRQ();
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
 }
