@@ -10,7 +10,8 @@ int syscall_null(struct pt_regs *r)
 
 int syscall_exit(struct pt_regs *r)
 {
-	printk("Hello, world!\n");
+	printk("pid %d: Bye cruel world!\n", current->pid);
+	sched_rm_process(current);
 	SYSCALL_RETVAL(r) = 0x13371337;
 	return 0;
 }

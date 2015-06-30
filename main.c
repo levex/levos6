@@ -24,7 +24,7 @@ void do_test()
 	/* try /bin/sh */
 	char *p = "/levex.txt";
 	printk("test: trying to find inode of %s\n", p);
-	int i = ext2_find_file_inode(__get__fs());
+	int i = ext2_find_file_inode(__get__fs(), p);
 	if (i < 0) {
 		printk("test: %s does not exist!\n", p);
 		return;
@@ -71,6 +71,13 @@ void start_sched()
 
 extern int kernel_end;
 extern int kernel_base;
+
+/* this is called by kinit (pid1) */
+int main_init() {
+	printk("%s: starting /init\n", __func__);
+
+	return -ENOENT;
+}
 
 void main(struct multiboot *mboot) {
 

@@ -57,6 +57,42 @@ int sched_add_process(struct process *p)
 	return 0;
 }
 
+int sched_mark_zombie(struct process *p)
+{
+	p->state = PROCESS_ZOMBIE;
+	return 0;
+}
+
+int sched_rm_process(struct process *p)
+{
+	int success = 0;
+
+	if (!p)
+		return -EINVAL;
+	
+	if (p == current) {
+		if (current->pid == 1)
+			panic("Attempted to kill init process!\n");
+		sched_mark_zombie(current);
+		schedule_noirq();
+	}
+
+	for (int i = 0; i < PROC_QUEUE_SIZE; i++) {
+		if (process_queue[i]->pid == p->pid) {
+			process_queue[i] = 0;
+			success = 1;
+			break;
+		}
+	}
+
+	if (!success)
+		return -EINVAL;
+
+	sched_current_processes --;
+
+	return sched_destroy_process(p);
+}
+
 int sched_create_stack(struct process *p)
 {
 	if (!p)
@@ -82,7 +118,7 @@ struct process *sched_mk_process(char *comm, uint32_t entry)
 
 	struct process *p = kmalloc(sizeof(*p));
 	if (!p)
-		return -ENOMEM;
+		return 0;
 
 	p->comm = comm;
 	p->time_used = 0;
@@ -131,8 +167,9 @@ int sched_destroy_process(struct process *p)
 	 * it was actually allocated by liballoc or is it just
 	 * a plain .data string...
 	 */
-	mm_free_pages(PROCESS_STACK_GET(p), 1);
-	new_free(p);
+//	mm_free_pages(PROCESS_STACK_GET(p), 1);
+//	new_free(p);
+	/* FIXME */
 	return 0;
 }
 
@@ -147,7 +184,9 @@ retry:
 
 	next = process_queue[sched_next];
 	sched_next ++;
-	if (!next)
+	if (!next || next->state == PROCESS_ZOMBIE
+		/* only to schedule to idle if there are no processes */
+		  || (next->pid == 0 && sched_current_processes > 1))
 		goto retry;
 	
 	return next;
@@ -167,16 +206,20 @@ void kinit_task()
 {
 	int ret;
 	printk("kinit: setting up userspace\n");
-	asm volatile("mov $0x01, %%eax\n"
-			"int $0x80\n"
-			"mov %%eax, %0":"=r"(ret)::"eax");
-	printk("ret = 0x%x\n", ret);
 	asm volatile("mov $0x00, %%eax\n"
 			"int $0x80\n"
 			"mov %%eax, %0":"=r"(ret)::"eax");
-	printk("ret = 0x%x\n", ret);
-	while(1) schedule_noirq();
+	if (ret == -ENOSYS)
+		printk("kinit: system calls are working!\n");
+	else panic("System calls are broken!\n");
+
+	ret = main_init();
+	if (ret)
+		panic("failed to find a suitable init file (0x%x)\n", ret);
+
 	panic("well, that's messed up\n");
+
+	while(1) schedule_noirq();
 }
 
 void schedule_noirq()
@@ -198,20 +241,23 @@ void post_schedule_noirq()
 void sched_start_idle()
 {
 	printk("sched: starting idle task\n");
+	DISABLE_IRQ();
 	struct process *idle = sched_mk_process("idle", idle_task);
 	sched_add_process(idle);
 	current = idle;
-	struct process *kinit = sched_mk_process("kinit", kinit_task);
+	struct process *kinit = sched_mk_process("init", kinit_task);
 	sched_add_process(kinit);
-	DISABLE_IRQ();
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
+	panic("sched: couldn't start idle task\n");
 }
 
 /* FIXME: this shouldn't be here */
 extern uint32_t pre_irq_esp;
 void sched_schedule()
 {
+	struct process *prev = 0;	
+	
 	if (!can_schedule)
 		return;
 	
@@ -221,6 +267,11 @@ void sched_schedule()
 	if (current) {
 		struct pt_regs *irq_regs = GRAB_PRE_IRQ_REGS();
 
+		if (current->state == PROCESS_ZOMBIE) {
+			prev = current;
+			goto next;
+		}
+
 		current->time_used ++;
 		if (current->time_used < MAX_PROC_TIME)
 			return;
@@ -229,10 +280,12 @@ void sched_schedule()
 	} else panic("Scheduler has no current process\n");
 
 	/* select next process */
+next:	
+	if (prev)
+		sched_destroy_process(prev);
 	current = sched_select();
 	current->time_used = 0;
 	current->state = PROCESS_RUNNING;
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
 }
-

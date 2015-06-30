@@ -3,6 +3,8 @@
 
 #ifdef __LEVOS_ARCH_x86__
 #include <levos/x86.h>
+#elif defined(__LEVOS_ARCH_arm__)
+#include <levos/arm.h>
 #endif
 
 #include <levos/page.h>

@@ -124,7 +124,7 @@ void paging_fini()
 	for (uintptr_t i = hs; i < KHEAP_END; i += 0x1000)
 		get_page(i, 1, kernel_dir);
 
-	printk("mm: page directory setup, switching to it...\n");
+	printk("mm: page directory setup.\n");
 	switch_page_dir(kernel_dir);
 	
 	printk("mm: total reserved memory: %d KB\n", mem_used());

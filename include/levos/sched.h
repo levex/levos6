@@ -7,11 +7,16 @@ struct process {
 	int time_used;
 	int state;
 
-	struct device *stdin;
-	struct device *stdout;
+	struct file *stdin;
+	struct file *stdout;
 
 	/* Architecture-specific */
 	struct pt_regs r;
+	/* 
+	 * This, ladies and gentleman, is the definition of "ugly hack".
+	 * (IOW, DON'T MODIFY OR LET THE AUTHOR DIE AND/OR LEAVE)
+	 */
+	ARCH_PROCESS_FIELDS;
 };
 
 extern struct process *current;
@@ -36,5 +41,7 @@ extern int sched_add_process(struct process *p);
 extern struct process *sched_mk_process(char *comm, uint32_t entry);
 
 extern void sched_schedule();
+
+extern struct process *current;
 
 #endif /* __SCHED_H */

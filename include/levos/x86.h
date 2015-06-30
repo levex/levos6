@@ -7,6 +7,7 @@ int x86_serial_init();
 
 struct pt_regs {
 	uint32_t magic;
+	uint32_t cr3;
 	uint32_t edi;
 	uint32_t esi;
 	uint32_t ebp;
@@ -32,8 +33,11 @@ struct pt_regs2 {
 	uint32_t ebp;
 	uint32_t esi;
 	uint32_t edi;
+	uint32_t cr3;
 	uint32_t magic;
 } __attribute__((packed));
+
+#define ARCH_PROCESS_FIELDS page_dir_t page_dir;
 
 #define DUMP_AREA_AT(x, n) 	do { \
 					int ___n = (n); \
@@ -71,11 +75,12 @@ extern struct pt_regs __x86_pre_irq_regs;
 				       r->magic, r->eflags, r->cs, r->eip); \
 				} while (0);
 
-#define ARCH_SWITCH_CONTEXT() do { \
+#define ARCH_SWITCH_CONTEXT() do {  \
 				asm volatile("" \
 				"mov %%eax, %%esp \n" \
+				"mov %%ebx, %%cr3 \n" \
 				"popal" :: \
-				"a"(current->r.esp)); \
+				"a"(current->r.esp),"b"(current->r.cr3)); \
 				asm volatile("iretl"); \
 				} while(0);
 
@@ -88,12 +93,15 @@ extern struct pt_regs __x86_pre_irq_regs;
 		#name ":\n"              	  	\
 		"	mov %esp, pre_pushal_esp \n"	\
 		"	pushal \n" 			\
+		"	movl %cr3, %eax \n" 		\
+		"	pushl %eax \n"			\
 		"	pushl $0x13371337 \n"		\
 		"	movl %esp, pre_irq_esp \n"	\
 		"	call save_pre_irq_regs \n"	\
 		"	movl $" #n ", current_irq \n"	\
 		"	call send_eoi\n"		\
 		"	call __irq_" #name "\n"   	\
+		"	pop %eax \n"			\
 		"	pop %eax \n"			\
 		"	popal \n"			\
 		"	iretl");            		\

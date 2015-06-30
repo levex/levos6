@@ -42,5 +42,7 @@ int arch_sched_mk_initial_regs(struct pt_regs *r)
 	memset(r, 0, sizeof(*r));
 	r->cs = 0x8;
 	r->eflags = 0x202;
+
+	asm volatile("mov %%cr3, %%eax" :"=a"(r->cr3));
 	return 0;
 }
