@@ -1,7 +1,5 @@
 #include <levos/levos.h>
 
-#define PROC_QUEUE_SIZE 32
-
 struct process *process_queue[PROC_QUEUE_SIZE];
 
 int sched_next = 0;

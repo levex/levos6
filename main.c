@@ -78,6 +78,9 @@ int main_init() {
 	asm volatile("int $0x80"
 			:"=r"(retval)
 			:"a"(4),"b"(1),"c"("Hello, world!\n"),"d"(14));
+
+	/* fire up kernel shell */
+	kernel_shell_start();
 	return -ENOENT;
 }
 

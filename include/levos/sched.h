@@ -20,6 +20,9 @@ struct process {
 	ARCH_PROCESS_FIELDS;
 };
 
+#define PROC_QUEUE_SIZE 32
+
+extern struct process *process_queue[];
 extern struct process *current;
 
 #define PROCESS_NULL 		0 /* process was never in sched queue */

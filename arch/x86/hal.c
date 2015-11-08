@@ -25,7 +25,6 @@ extern page_dir_t *current_directory;
 void switch_page_dir(page_dir_t *d)
 {
 	current_directory = d;
-	printk("x86: page directory set to 0x%x\n", d);
 	asm volatile (
 		"mov %0, %%cr3\n"
 		"mov %%cr0, %%eax\n"

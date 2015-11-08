@@ -4,3 +4,4 @@ OBJS += kernel/device.o
 OBJS += kernel/printk.o
 OBJS += kernel/sched.o
 OBJS += kernel/syscall.o
+OBJS += kernel/shell.o

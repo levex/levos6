@@ -88,6 +88,7 @@ void printk_ticks()
 	vprintk("] ", NULL);
 }
 
+
 void printk(char *fmt, ...)
 {
 	va_list ap;
