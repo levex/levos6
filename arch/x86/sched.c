@@ -1,4 +1,6 @@
 #include <levos/levos.h>
+#include <levos/arch.h>
+#include <levos/sched.h>
 
 /* This is the struct grabbed by GRAB_PRE_IRQ_REGS() */
 struct pt_regs __x86_pre_irq_regs;
@@ -35,6 +37,22 @@ void arch_sched_setup_stack(struct process *p)
 	*(--s) = p->r.esi;
 	*(--s) = p->r.edi;
 	p->r.esp = s;
+}
+
+void arch_sched_setup_address_space(struct process *p)
+{
+	switch_page_dir(p->page_dir);
+}
+
+extern page_dir_t *kernel_dir;
+int arch_sched_make_address_space(struct process *p)
+{
+	page_dir_t *ndir = copy_page_dir(kernel_dir);
+	if (!ndir)
+		return -ENOMEM;
+
+	p->page_dir = ndir;
+	return 0;
 }
 
 int arch_sched_mk_initial_regs(struct pt_regs *r)

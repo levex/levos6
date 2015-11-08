@@ -37,7 +37,7 @@ struct pt_regs2 {
 	uint32_t magic;
 } __attribute__((packed));
 
-#define ARCH_PROCESS_FIELDS page_dir_t page_dir;
+#define ARCH_PROCESS_FIELDS page_dir_t *page_dir;
 
 #define DUMP_AREA_AT(x, n) 	do { \
 					int ___n = (n); \

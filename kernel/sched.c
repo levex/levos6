@@ -125,6 +125,7 @@ struct process *sched_mk_process(char *comm, uint32_t entry)
 	p->pid = global_pid ++;
 	p->state = PROCESS_NULL;
 	arch_sched_mk_initial_regs(&p->r);
+	arch_sched_make_address_space(p);
 	INS_PTR(&p->r) = entry;
 	int r = sched_create_stack(p);
 	if (r) {
@@ -287,5 +288,6 @@ next:
 	current->time_used = 0;
 	current->state = PROCESS_RUNNING;
 	arch_sched_setup_stack(current);
+	arch_sched_setup_address_space(current);
 	ARCH_SWITCH_CONTEXT();
 }

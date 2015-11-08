@@ -8,6 +8,7 @@
 #endif
 
 #include <levos/page.h>
+#include <levos/sched.h>
 
 /* Called: right after kmsg_init() succeeds
  * Goal: setup memory management
@@ -25,6 +26,9 @@ extern uint32_t arch_get_ticks();
 extern void arch_do_mboot();
 
 void switch_page_dir(page_dir_t *p);
+
+extern int arch_sched_make_address_space(struct process *p);
+extern void arch_sched_setup_address_space(struct process *p);
 
 extern void irq_set(size_t n, void (*h)(void));
 extern void send_eoi();

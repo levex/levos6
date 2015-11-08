@@ -20,6 +20,16 @@ uint32_t mem_total()
 	return get_nframes() * 4;
 }
 
+page_dir_t *copy_page_dir(page_dir_t *src)
+{
+	page_dir_t *dst = kmalloc(sizeof(*dst));
+	if (!dst)
+		return 0;
+
+	memcpy(dst, src, sizeof(*dst));
+	return dst;
+}
+
 void alloc_frame(page_t *p, int k, int w)
 {
 	if (p->frame != 0) {
