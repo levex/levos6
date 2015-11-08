@@ -4,22 +4,36 @@ int num_syscalls = 0;
 
 int syscall_null(struct pt_regs *r)
 {
-	SYSCALL_RETVAL(r) = -ENOSYS;
-	return 0;
+	return -ENOSYS;
 }
 
 int syscall_exit(struct pt_regs *r)
 {
 	printk("pid %d: Bye cruel world!\n", current->pid);
 	sched_rm_process(current);
-	SYSCALL_RETVAL(r) = 0x13371337;
-	return 0;
+	return 0x13371337;
+}
+
+int syscall_write(struct pt_regs *r)
+{
+	int fd = SYSCALL_ARG1(r);
+	char *buf = SYSCALL_ARG2(r);
+	size_t count = SYSCALL_ARG3(r);
+	/* FIXME: check out of bounds */
+	struct file *fp = current->file_table[fd];
+
+	if (!fp)
+		return -EBADF;
+
+	return fp->fops->write(fp, buf, count);
 }
 
 void *syscalls[256] = {
 	0,
 	syscall_exit,
-	0,
+	0, /* fork */
+	0, /* read */
+	syscall_write,
 };
 
 DEF_IRQ_HANDLER(0x80, syscall_hub)
@@ -33,7 +47,7 @@ DEF_IRQ_HANDLER(0x80, syscall_hub)
 	f = syscalls[SYSCALL_NUMBER(r)];
 	if (!f)
 		f = syscall_null;
-	f(r);
+	SYSCALL_RETVAL(r) = f(r);
 	memcpy(&current->r, r, sizeof(struct pt_regs));
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();

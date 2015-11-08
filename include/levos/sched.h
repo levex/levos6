@@ -1,14 +1,15 @@
 #ifndef __SCHED_H
 #define __SCHED_H
 
+#include <levos/vfs.h>
+
 struct process {
 	char *comm;
 	int pid;
 	int time_used;
 	int state;
 
-	struct file *stdin;
-	struct file *stdout;
+	struct file *file_table[128];
 
 	/* Architecture-specific */
 	struct pt_regs r;

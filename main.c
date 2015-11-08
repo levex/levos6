@@ -74,8 +74,10 @@ extern int kernel_base;
 
 /* this is called by kinit (pid1) */
 int main_init() {
-	printk("%s: starting /init\n", __func__);
-
+	int retval = 0;
+	asm volatile("int $0x80"
+			:"=r"(retval)
+			:"a"(4),"b"(1),"c"("Hello, world!\n"),"d"(14));
 	return -ENOENT;
 }
 

@@ -111,6 +111,18 @@ int sched_create_stack(struct process *p)
 	return 0;
 }
 
+void sched_make_filetable(struct process *p)
+{
+	struct file **ft = p->file_table;
+
+	/* fd 0 is stdin */
+	/* FIXME */
+
+	/* fd 1 is stdout, this will be kmsg atm */
+	ft[1] = &console_file;
+
+}
+
 struct process *sched_mk_process(char *comm, uint32_t entry)
 {
 	if (!comm || !entry)
@@ -132,7 +144,7 @@ struct process *sched_mk_process(char *comm, uint32_t entry)
 		new_free(p);
 		return 0;
 	}
-
+	sched_make_filetable(p);
 	printk("sched: newproc: IP: 0x%x SP: 0x%x\n", INS_PTR(&p->r), STACK_PTR(&p->r));
 
 	return p;
