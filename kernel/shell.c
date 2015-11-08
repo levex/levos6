@@ -49,10 +49,34 @@ void cmd_ps()
 	}
 }
 
+void cmd_lsdev()
+{
+	_printk("NAME TYPE\n");
+	for (int i = 0; i < get_num_of_devices(); i++) {
+		struct device *d = device_get(i);
+
+		if (!d) {
+			i --;
+			continue;
+		}
+
+		_printk("%s %s\n", d->name,
+				d->type == DEV_TYPE_TTY ? "[tty]"
+				: d->type == DEV_TYPE_PSEUDO ? "[pseudo]"
+				: d->type == DEV_TYPE_ISA ? "[isa]"
+				: d->type == DEV_TYPE_PCI ? "[pci]"
+				: d->type == DEV_TYPE_BLK ? "[blk]"
+				: d->type == DEV_TYPE_TTY_INPUT ? "[intty]"
+				: "[unktype]");
+	}
+}
+
 void parse_input(char *cmd)
 {
 	if(strcmp("ps", cmd) == 0) {
 		cmd_ps();
+	} else if (strcmp("lsdev", cmd) == 0) {
+		cmd_lsdev();
 	}
 }
 
