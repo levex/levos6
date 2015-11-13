@@ -71,12 +71,46 @@ void cmd_lsdev()
 	}
 }
 
+void cmd_ls(char *arg)
+{
+	_printk(arg);
+}
+
+void cmd_exit()
+{
+	asm volatile("int $0x80"::"a"(1));
+}
+
+static int __i_ = 1000;
+static void __cmd_testmt_1() { while (__i_ -= 100 > 0) _printk("%d\n", __i_);
+		asm volatile("int $0x80"::"a"(1));}
+static void __cmd_testmt_2() { while (__i_ ++ < 1000) { _printk("%d\n", __i_);
+		if (!(__i_ % 100)) schedule_noirq(); }
+		asm volatile("int $0x80"::"a"(1));}
+void cmd_testmt()
+{
+	static struct process *p1;
+	static struct process *p2;
+
+	p1 = sched_mk_process("p1", __cmd_testmt_1);
+	p2 = sched_mk_process("p2", __cmd_testmt_2);
+
+	sched_add_process(p1);
+	sched_add_process(p2);
+}
+
 void parse_input(char *cmd)
 {
 	if(strcmp("ps", cmd) == 0) {
 		cmd_ps();
 	} else if (strcmp("lsdev", cmd) == 0) {
 		cmd_lsdev();
+	} else if (strncmp("ls ", cmd, 3) == 0) {
+		cmd_ls(cmd + 3);
+	} else if (strcmp("exit", cmd) == 0) {
+		cmd_exit();
+	} else if (strcmp("testmt", cmd) == 0) {
+		cmd_testmt();
 	}
 }
 
