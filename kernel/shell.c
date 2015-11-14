@@ -92,7 +92,7 @@ void cmd_stat(char *arg)
 
 void cmd_cat(char *arg)
 {
-	struct file *filp;
+	int fd;
 	char *buf;
 	struct stat st;
 	int ret;
@@ -103,12 +103,12 @@ void cmd_cat(char *arg)
 		return;
 	}
 	buf = kmalloc(st.st_size);
-	filp = vfs_open(arg);
-	if (filp <= 0) {
+	fd = call_syscall(5, arg, 0, 0, 0);
+	if (fd <= 0) {
 		_printk("open failed\n");
 		return;
 	}
-	ret = filp->fops->read(filp, buf, st.st_size);
+	ret = call_syscall(3, fd, buf, st.st_size, 0);
 	_printk("%s\n", buf);
 }
 

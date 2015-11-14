@@ -55,14 +55,40 @@ int syscall_open(struct pt_regs *r)
 	return -EMFILE;
 }
 
+int syscall_read(struct pt_regs *r)
+{
+	int fd = SYSCALL_ARG1(r);
+	char *buf = SYSCALL_ARG2(r);
+	size_t size = SYSCALL_ARG3(r);
+	struct file *filp;
+
+	filp = current->file_table[fd];
+	if (filp == 0)
+		return -EBADF;
+
+	return filp->fops->read(filp, buf, size);
+}
+
+int syscall_close(struct pt_regs *r)
+{
+	int fd = SYSCALL_ARG1(r);
+
+	if (current->file_table[fd] == 0)
+		return -EBADF;
+
+	current->file_table[fd] = 0;
+
+	return 0;
+}
+
 void *syscalls[256] = {
 	0,
 	syscall_exit,
 	0, /* fork */
-	0, /* read */
+	syscall_read,
 	syscall_write,
 	syscall_open,
-	0,
+	syscall_close,
 	0,
 	0,
 	0,
