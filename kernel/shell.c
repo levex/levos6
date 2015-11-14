@@ -109,7 +109,7 @@ void cmd_cat(char *arg)
 		return;
 	}
 	ret = call_syscall(3, fd, buf, st.st_size, 0);
-	_printk("%s\n", buf);
+	call_syscall(4, 1, buf, st.st_size, 0);
 }
 
 void cmd_exit()
