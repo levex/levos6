@@ -76,9 +76,45 @@ void cmd_ls(char *arg)
 	_printk(arg);
 }
 
+void cmd_stat(char *arg)
+{
+	struct stat st;
+	int ret;
+
+	ret = call_syscall(18, arg, &st, 0, 0);
+	if (ret < 0) {
+		_printk("Error while stat: %d\n", ret);
+		return;
+	}
+	_printk("File: %s\n", arg);
+	_printk("Size: %d bytes\n", st.st_size);
+}
+
+void cmd_cat(char *arg)
+{
+	struct file *filp;
+	char *buf;
+	struct stat st;
+	int ret;
+
+	ret = call_syscall(18, arg, &st, 0, 0);
+	if (ret < 0) {
+		_printk("Error while stat: %d\n", ret);
+		return;
+	}
+	buf = kmalloc(st.st_size);
+	filp = vfs_open(arg);
+	if (filp <= 0) {
+		_printk("open failed\n");
+		return;
+	}
+	ret = filp->fops->read(filp, buf, st.st_size);
+	_printk("%s\n", buf);
+}
+
 void cmd_exit()
 {
-	asm volatile("int $0x80"::"a"(1));
+	call_syscall(1, 0, 0, 0, 0);
 }
 
 static int __i_ = 1000;
@@ -111,6 +147,10 @@ void parse_input(char *cmd)
 		cmd_exit();
 	} else if (strcmp("testmt", cmd) == 0) {
 		cmd_testmt();
+	} else if (strncmp("cat ", cmd, 4) == 0) {
+		cmd_cat(cmd + 4);
+	} else if (strncmp("stat ", cmd, 5) == 0) {
+		cmd_stat(cmd + 5);
 	}
 }
 

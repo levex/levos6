@@ -28,12 +28,57 @@ int syscall_write(struct pt_regs *r)
 	return fp->fops->write(fp, buf, count);
 }
 
+int syscall_stat(struct pt_regs *r)
+{
+	char *path = SYSCALL_ARG1(r);
+	struct stat *st = SYSCALL_ARG2(r);
+
+	return vfs_stat(path, st);
+}
+
+int syscall_open(struct pt_regs *r)
+{
+	char *path = SYSCALL_ARG1(r);
+	int flags = SYSCALL_ARG2(r);
+	int mode = SYSCALL_ARG4(r);
+	struct file *filp;
+
+	filp = vfs_open(path);
+
+	for (int i = 3; i < 128; i++) {
+		if (current->file_table[i] == 0) {
+			current->file_table[i] = filp;
+			return i;
+		}
+	}
+
+	return -EMFILE;
+}
+
 void *syscalls[256] = {
 	0,
 	syscall_exit,
 	0, /* fork */
 	0, /* read */
 	syscall_write,
+	syscall_open,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	syscall_stat,
+	0,
+	0,
+	0,
+	0,
 };
 
 DEF_IRQ_HANDLER(0x80, syscall_hub)
@@ -51,6 +96,16 @@ DEF_IRQ_HANDLER(0x80, syscall_hub)
 	memcpy(&current->r, r, sizeof(struct pt_regs));
 	arch_sched_setup_stack(current);
 	ARCH_SWITCH_CONTEXT();
+}
+
+int call_syscall(int sys, int a1, int a2, int a3)
+{
+	int ret = -ENOSYS;
+
+	asm volatile("int $0x80":"=a"(ret)
+			:"a"(sys), "b"(a1), "c"(a2), "d"(a3));
+
+	return ret;
 }
 
 int syscall_init()
