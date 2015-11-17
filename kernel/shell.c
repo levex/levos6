@@ -135,6 +135,34 @@ void cmd_testmt()
 	sched_add_process(p2);
 }
 
+void cmd_elf(char *arg)
+{
+	int fd, ret;
+	struct file *fp;
+	int isElf;
+	elf_header_t header;
+
+	fd = call_syscall(5, arg, 0, 0, 0);
+	if (fd <= 0) {
+		_printk("open failed: %d\n", fd);
+		return;
+	}
+
+	fp = current->file_table[fd];
+	isElf = elf_probe(fp);
+	_printk("file(%d) is %sELF\n", fd, isElf ? "" : "not ");
+	if (!isElf)
+		return;
+
+	fp->fops->read(fp, &header, sizeof(elf_header_t));
+
+	_printk("ELF Type: %s\n", elf_type_as_string(header.e_type));
+	_printk("Entry Point: 0x%x\n", header.e_entry);
+
+	ret = elf_load(fp);
+	_printk("ELF RET: %s\n", errno_to_string(ret));
+}
+
 void parse_input(char *cmd)
 {
 	if(strcmp("ps", cmd) == 0) {
@@ -151,6 +179,8 @@ void parse_input(char *cmd)
 		cmd_cat(cmd + 4);
 	} else if (strncmp("stat ", cmd, 5) == 0) {
 		cmd_stat(cmd + 5);
+	} else if (strncmp("elf ", cmd, 4) == 0) {
+		cmd_elf(cmd + 4);
 	}
 }
 

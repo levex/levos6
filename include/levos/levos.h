@@ -22,5 +22,6 @@
 #include <levos/ext2.h>
 #include <levos/sched.h>
 #include <levos/keyboard.h>
+#include <levos/elf.h>
 
 #endif /* __LEVOS_H */

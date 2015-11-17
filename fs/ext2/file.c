@@ -90,11 +90,6 @@ int ext2_read_file(struct file *f, void *buf, size_t count)
 	if (inode < 0)
 		return inode;
 	
-	struct ext2_inode *ibuf = kmalloc(sizeof(*ibuf));
-	if (!ibuf)
-		return -ENOMEM;
-	
-	ext2_read_inode(f->fs, ibuf, inode);
 	int total;
 	int bs = EXT2_PRIV(f->fs)->blocksize;
 
@@ -115,12 +110,13 @@ int ext2_read_file(struct file *f, void *buf, size_t count)
 	ext2_file_read_block(f, block, cblock);
 	for (int i = 0; i < blocks; i++)
 		ext2_file_read_block(f, block + (i + 1) * bs, cblock + i + 1);
-	
+
 	/* now read the bytes */
 	memcpy(buf, block + (f->pos - cblock * bs), count);
 
 	f->pos += count;
-	
+
+	new_free(block);
 	return count;
 }
 

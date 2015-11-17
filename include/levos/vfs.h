@@ -66,6 +66,10 @@ int vfs_init();
 int vfs_root_mounted();
 int register_fs(struct filesystem *fs);
 
+inline void file_set_position(struct file *f, int p)
+{
+	f->pos = p;
+}
 int devfs_init();
 
 #endif
