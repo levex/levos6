@@ -2,7 +2,7 @@
 #define __LEVOS_INCLUDE_ARM_H
 
 struct pt_regs {
-	char regs[32];
+    char regs[32];
 } __attribute__((packed));
 
 #define ARCH_PROCESS_FIELDS ;

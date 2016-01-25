@@ -71,9 +71,11 @@
 #define ATA_REG_ALTSTATUS  0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
- 
+
 // Directions:
 #define      ATA_READ      0x00
 #define      ATA_WRITE     0x013
+
+extern int ata_init();
 
 #endif

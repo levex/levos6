@@ -3,47 +3,47 @@
 
 struct dirent *devfs_readdir(struct file *d)
 {
-	return 0;
+    return 0;
 }
 
-int devfs_mount(struct device *dev)
+struct filesystem *devfs_mount(struct device *dev)
 {
-	return -ENODEV;
+    return (void *) -ENODEV;
 }
 
 struct file *devfs_open(struct filesystem *fs, char *p)
 {
-	if (!fs || !p)
-		return -EINVAL;
+    if (!fs || !p)
+        return (void *) -EINVAL;
 
-	struct file *f = kmalloc(sizeof(*f));
-	if (!f)
-		return -ENOMEM;
+    struct file *f = kmalloc(sizeof(*f));
+    if (!f)
+        return (void *) -ENOMEM;
 
-	struct file_operations *fops = kmalloc(sizeof(*fops));
-	if (!fops) {
-		new_free(f);
-		return -ENOMEM;
-	}
+    struct file_operations *fops = kmalloc(sizeof(*fops));
+    if (!fops) {
+        new_free(f);
+        return (void *) -ENOMEM;
+    }
 
-	f->fs = fs;
-	f->respath = p;
-	f->fops = fops;
-	return -ENOSYS;
+    f->fs = fs;
+    f->respath = p;
+    f->fops = fops;
+    return (void *) -ENOSYS;
 }
 
 struct filesystem devfs = {
-	.fsname = "devfs",
-	.readdir = devfs_readdir,
-	.mount = devfs_mount,
-	.open = devfs_open,
+    .fsname = "devfs",
+    .readdir = devfs_readdir,
+    .mount = devfs_mount,
+    .open = devfs_open,
 };
 
 int devfs_init()
 {
-	printk("devfs: there are %d devices\n", get_num_of_devices());
-	
-	register_fs(&devfs);
+    printk("devfs: there are %d devices\n", get_num_of_devices());
 
-	return 0;
+    register_fs(&devfs);
+
+    return 0;
 }

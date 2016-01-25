@@ -4,8 +4,8 @@
 #include <levos/vfs.h>
 
 struct console {
-	struct device *dev;
-	int id; /* To be filled by the subsystem */
+    struct device *dev;
+    int id; /* To be filled by the subsystem */
 };
 
 extern struct file console_file;

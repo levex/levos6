@@ -9,14 +9,14 @@
 extern int tty_init();
 
 struct tty {
-	/* where our input comes from */
-	struct device *input;
-	/* where are we outputting */
-	struct device *output;
-	/* input buffer */
-	uint8_t *inputbuf;
-	/* output buffer */
-	uint8_t *outputbuf;
+    /* where our input comes from */
+    struct device *input;
+    /* where are we outputting */
+    struct device *output;
+    /* input buffer */
+    uint8_t *inputbuf;
+    /* output buffer */
+    uint8_t *outputbuf;
 };
 
 #endif /* __LEVOS_TTY_H */

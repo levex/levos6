@@ -11,6 +11,7 @@ int elf_probe(struct file *filp)
 		magic[2] == 'L'  &&
 		magic[3] == 'F')
 		return 1;
+	printk("%x %x %x %x", magic[0], magic[1], magic[2], magic[3]);
 	return 0;
 }
 
@@ -20,11 +21,11 @@ int elf_load(struct file *filp)
 	elf_program_header_t *ph;
 	int a = 0;
 
-	if (!elf_probe(filp))
-		return -EBADF;
-
 	/* reset file back to the beginning of the file */
 	file_set_position(filp, 0);
+
+	if (!elf_probe(filp))
+		return -EBADF;
 
 	/* read in ELF header */
 	filp->fops->read(filp, &header, sizeof(elf_header_t));
@@ -50,8 +51,10 @@ int elf_load(struct file *filp)
 			case 0: /* NULL */
 				break;
 			case 1: /* LOAD */
-				printk("LOAD: offset 0x%x vaddr 0x%x paddr 0x%x filesz 0x%x memsz 0x%x\n",
-			ph->p_offset, ph->p_vaddr, ph->p_paddr, ph->p_filesz, ph->p_memsz);
+				printk("LOAD: offset 0x%x vaddr 0x%x"
+					"paddr 0x%x filesz 0x%x memsz 0x%x\n",
+					ph->p_offset, ph->p_vaddr, ph->p_paddr,
+					ph->p_filesz, ph->p_memsz);
 				break;
 			default:
 				break;

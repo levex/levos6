@@ -6,17 +6,17 @@ int current_tty = -1;
 
 void tty_set_current(int n)
 {
-	if (current_tty == -1)
-		printk("boot: current tty will be tty%d\n", n);
-	current_tty = n;
-	return 0;
+    if (current_tty == -1)
+        printk("boot: current tty will be tty%d\n", n);
+
+    current_tty = n;
 }
 
 int tty_init() {
-	printk("tty: there are %d TTYs\n", TTY_COUNT);
+    printk("tty: there are %d TTYs\n", TTY_COUNT);
 
-	tty_set_current(0);
+    tty_set_current(0);
 
-	return 0;
+    return 0;
 }
 

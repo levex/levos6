@@ -33,9 +33,9 @@ uint32_t __pit_ticks = 0;
 
 DEF_IRQ_HANDLER(0, pit_irq)
 {
-	__pit_ticks ++;
-	sched_schedule();
-	return;
+    __pit_ticks ++;
+    sched_schedule();
+    return;
 }
 
 static inline void __pit_send_cmd(uint8_t cmd)
@@ -45,47 +45,48 @@ static inline void __pit_send_cmd(uint8_t cmd)
 
 static inline void __pit_send_data(uint16_t data, uint8_t counter)
 {
-        uint8_t        port = (counter==PIT_OCW_COUNTER_0) ? PIT_REG_COUNTER0 :
-                ((counter==PIT_OCW_COUNTER_1) ? PIT_REG_COUNTER1 : PIT_REG_COUNTER2);
+        uint8_t        port = (counter == PIT_OCW_COUNTER_0) ? PIT_REG_COUNTER0 :
+                ((counter == PIT_OCW_COUNTER_1) ? PIT_REG_COUNTER1 : PIT_REG_COUNTER2);
 
-        outportb (port, (uint8_t)data);
+        outportb(port, (uint8_t) data);
 }
 
-static inline uint8_t __pit_read_data (uint16_t counter) {
+static inline uint8_t __pit_read_data(uint16_t counter) {
 
-        uint8_t        port = (counter==PIT_OCW_COUNTER_0) ? PIT_REG_COUNTER0 :
-                ((counter==PIT_OCW_COUNTER_1) ? PIT_REG_COUNTER1 : PIT_REG_COUNTER2);
+        uint8_t        port = (counter == PIT_OCW_COUNTER_0) ? PIT_REG_COUNTER0 :
+                ((counter == PIT_OCW_COUNTER_1) ? PIT_REG_COUNTER1 : PIT_REG_COUNTER2);
 
-        return inportb (port);
+        return inportb(port);
 }
 
-static void pit_start_counter (uint32_t freq, uint8_t counter, uint8_t mode) {
+static void pit_start_counter(uint32_t freq, uint8_t counter, uint8_t mode) {
 
-        if (freq==0)
+        if (freq == 0)
                 return;
-        uint16_t divisor = (uint16_t)( 1193181 / (uint16_t)freq);
+
+        uint16_t divisor = (uint16_t) (1193181 / (uint16_t) freq);
 
         // send operational command words
         uint8_t ocw = 0;
-        ocw = (ocw & ~PIT_OCW_MASK_MODE) | mode;
-        ocw = (ocw & ~PIT_OCW_MASK_RL) | PIT_OCW_RL_DATA;
+        ocw = (ocw & ~PIT_OCW_MASK_MODE)    | mode;
+        ocw = (ocw & ~PIT_OCW_MASK_RL)      | PIT_OCW_RL_DATA;
         ocw = (ocw & ~PIT_OCW_MASK_COUNTER) | counter;
-        __pit_send_cmd (ocw);
+        __pit_send_cmd(ocw);
 
         // set frequency rate
-        __pit_send_data (divisor & 0xff, 0);
-        __pit_send_data ((divisor >> 8) & 0xff, 0);
+        __pit_send_data(divisor & 0xff, 0);
+        __pit_send_data((divisor >> 8) & 0xff, 0);
 }
 
 uint32_t arch_get_ticks()
 {
-	return __pit_ticks;
+    return __pit_ticks;
 }
 
 int pit_init()
 {
         irq_set(32, pit_irq);
         pit_start_counter (200,PIT_OCW_COUNTER_0, PIT_OCW_MODE_SQUAREWAVEGEN);
-	printk("x86: pit: clocksource registered\n");
+        printk("x86: pit: clocksource registered\n");
         return 0;
 }

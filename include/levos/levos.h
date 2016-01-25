@@ -9,6 +9,7 @@
 #define __weak __attribute__((weak))
 
 #include <levos/arch.h>
+#include <levos/ata.h>
 #include <levos/console.h>
 #include <levos/device.h>
 #include <levos/memset.h>
@@ -23,5 +24,9 @@
 #include <levos/sched.h>
 #include <levos/keyboard.h>
 #include <levos/elf.h>
+
+extern void kernel_shell_start();
+
+extern int syscall_init(void);
 
 #endif /* __LEVOS_H */

@@ -4,43 +4,47 @@
 extern int gdt_init();
 extern int idt_init();
 extern int irq_init();
+extern int x86_serial_init();
+extern int textmode_init();
+extern int exceptions_init();
+extern int pit_init();
 
 int arch_early_init()
 {
-	int rc;
+    int rc;
 
-	rc = x86_serial_init();
-	if (rc)
-		return rc;
+    rc = x86_serial_init();
+    if (rc)
+        return rc;
 
-	rc = textmode_init();
-	if (rc)
-		return rc;
+    rc = textmode_init();
+    if (rc)
+        return rc;
 
-	rc = gdt_init();
-	if (rc)
-		return rc;
+    rc = gdt_init();
+    if (rc)
+        return rc;
 
-	rc = idt_init();
-	if (rc)
-		return rc;
+    rc = idt_init();
+    if (rc)
+        return rc;
 
-	rc = exceptions_init();
-	if (rc)
-		return rc;
+    rc = exceptions_init();
+    if (rc)
+        return rc;
 
-	rc = irq_init();
-	if (rc)
-		return rc;
+    rc = irq_init();
+    if (rc)
+        return rc;
 
-	rc = pit_init();
-	if (rc)
-		return rc;
+    rc = pit_init();
+    if (rc)
+        return rc;
 
-	return 0;
+    return 0;
 }
 
 int arch_late_init()
 {
-	return 0;
+    return 0;
 }

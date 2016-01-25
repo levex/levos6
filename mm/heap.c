@@ -60,7 +60,7 @@ int liballoc_unlock() {
  * \return A pointer to the allocated memory.
  */
 extern void* liballoc_alloc(size_t pages) {
-	return mm_alloc_pages(pages);
+	return (void *) mm_alloc_pages(pages);
 }
 
 /** This frees previously allocated memory. The void* parameter passed

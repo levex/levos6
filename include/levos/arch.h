@@ -29,6 +29,8 @@ void switch_page_dir(page_dir_t *p);
 
 extern int arch_sched_make_address_space(struct process *p);
 extern void arch_sched_setup_address_space(struct process *p);
+extern int arch_sched_mk_initial_regs(struct pt_regs *);
+extern void arch_sched_setup_stack(struct process *);
 
 extern void irq_set(size_t n, void (*h)(void));
 extern void send_eoi();
