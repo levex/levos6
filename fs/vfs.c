@@ -93,6 +93,7 @@ struct filesystem *vfs_mount_fs(struct device *dev)
     {
         if (filesystems[i]->mount) {
             fs = filesystems[i]->mount(dev);
+            // printk("%s: ret=%x\n", __func__, fs);
             if ((intptr_t)fs > 0)
                 return fs;
         }

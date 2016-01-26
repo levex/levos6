@@ -166,8 +166,10 @@ void cmd_elf(char *arg)
     fp = current->file_table[fd];
     isElf = elf_probe(fp);
     _printk("file(%d) is %sELF\n", fd, isElf ? "" : "not ");
-    if (!isElf)
+    if (!isElf) {
+        call_syscall(6, fd, 0, 0);
         return;
+    }
 
     fp->fops->read(fp, &header, sizeof(elf_header_t));
 

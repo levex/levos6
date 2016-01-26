@@ -8,26 +8,26 @@ static int devices = 0;
 
 int device_register(struct device *dev)
 {
-	if (!dev)
-		return -EINVAL;
-	
-	if (devices >= MAX_DEVICES)
-		return -ENOSPC;
+    if ((intptr_t)dev <= 0)
+        return -EINVAL;
 
-	devs[devices ++] = dev;
+    if (devices >= MAX_DEVICES)
+        return -ENOSPC;
 
-	return 0;
+    devs[devices ++] = dev;
+
+    return 0;
 }
 
 int get_num_of_devices()
 {
-	return devices;
+    return devices;
 }
 
 struct device *device_get(int i)
 {
-	if (i >= MAX_DEVICES)
-		return 0;
+    if (i >= MAX_DEVICES)
+        return 0;
 
-	return devs[i];
+    return devs[i];
 }

@@ -119,6 +119,8 @@ int ide_identify()
         struct device *dev = kmalloc(sizeof(*dev));
         if (!dev)
             return -ENOMEM;
+
+        /* FIXME */
         dev->name = "sda";
         dev->type = DEV_TYPE_BLK;
         dev->read = ata_read;

@@ -11,6 +11,7 @@ void __kmsg_append(char c)
         return;
     if (kmsg_pos >= KMSG_BUFSIZE)
         return;
+
     kmsg_buf[kmsg_pos ++] = c;
 }
 

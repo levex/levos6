@@ -23,7 +23,7 @@ int serial_write(struct device *dev, char *buf, size_t count, size_t pos)
 }
 
 struct device serial_dev = {
-    .name = "stty",
+    .name = "stty0",
     .write = (void *)serial_write,
 };
 

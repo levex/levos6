@@ -64,7 +64,7 @@ int textmode_write(struct device *dev, char *buf, size_t count, size_t po)
 
 struct device tm_dev = {
     .write = (void *)textmode_write,
-    .name = "tm",
+    .name = "textmode",
 };
 
 struct console tm_con = {

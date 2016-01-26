@@ -77,6 +77,7 @@ int syscall_close(struct pt_regs *r)
     if (current->file_table[fd] == 0)
         return -EBADF;
 
+    /* FIXME free structures */
     current->file_table[fd] = 0;
 
     return 0;
