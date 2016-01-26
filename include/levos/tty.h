@@ -6,7 +6,12 @@
 #define TTY_COUNT 4
 #define TTY_BUF_SIZE 65536
 
+#define TTY_IN_BUFSIZE 8192
+#define TTY_OUT_BUFSIZE 8192
+
 extern int tty_init();
+
+extern void tty_set_default_output(struct device *);
 
 struct tty {
     /* where our input comes from */

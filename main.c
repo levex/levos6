@@ -92,6 +92,7 @@ void main(struct multiboot *mboot) {
     /* init the kmsg buffer and printk */
     console_sys_init();
     kmsg_init();
+    console_register(&kmsg_con);
 
     /* arch might want to setup stuff */
     arch_early_init();

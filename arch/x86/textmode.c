@@ -83,6 +83,7 @@ int textmode_init()
 
     textmode_clear(&tm_dev);
 
+    tty_set_default_output(&tm_dev);
     console_register(&tm_con);
     return 0;
 }
