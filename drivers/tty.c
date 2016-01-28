@@ -14,6 +14,11 @@ static struct device *default_output = 0;
 
 void tty_set_default_output(struct device *d)
 {
+    default_output = d;
+}
+
+void tty_set_default_input(struct device *d)
+{
     default_input = d;
 }
 
@@ -41,6 +46,16 @@ struct tty *get_tty(int i)
     return ttys[i];
 }
 
+void write_tty_char(int id, char c)
+{
+    struct tty *tty = get_tty(id);
+    if (!tty)
+        return;
+
+    if(tty->output)
+        tty->output->write(tty->selfdevice, &c, 1, 0);
+}
+
 void tty_set_input(struct tty *tty, struct device *in)
 {
     tty->input = in;
@@ -61,14 +76,16 @@ void tty_override_all_defaults()
     }
 }
 
+/* write writes to the input buffer */
 int tty_write(struct device *dev, const void *buf, size_t count, size_t pos)
 {
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
 
-    return -ENOSYS;
+    return tty->output->write(tty->output, buf, count, pos);
 }
 
+/* read reads from the output buffer */
 int tty_read(struct device *dev, void *buf, size_t count, size_t pos)
 {
     struct tty_private *priv = dev->priv;
@@ -124,6 +141,7 @@ struct device *tty_create_device(struct tty *tty)
     dev->sync  = tty_flush;
     dev->fs    = 0;
 
+    tty->selfdevice = dev;
     return dev;
 }
 
@@ -134,18 +152,19 @@ int tty_init()
 
         t->tty_id = i;
         t->input = default_input;
-        t->output = 0;
+        t->output = default_output;
         t->inputbuf = kmalloc(TTY_IN_BUFSIZE);
         t->outputbuf = kmalloc(TTY_OUT_BUFSIZE);
         t->selfdevice = 0;
+        t->buffered = 1;
         ttys[i] = t;
 
         device_register(tty_create_device(t));
     }
     tty_set_current(0);
-
     tty_override_all_defaults();
 
     printk("tty: there are %d TTYs\n", TTY_COUNT);
+    printk_switch_tty(0);
     return 0;
 }

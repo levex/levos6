@@ -32,9 +32,25 @@ static int console_file_write(struct file *fp, const void *buf, size_t count)
     return count;
 }
 
+static int console_dev_write(struct device *dev, const void *buf, size_t count, size_t pos)
+{
+    for (int i = 0; i < count; i ++)
+        console_send(((char *)buf)[i]);
+
+    return count;
+}
+
 struct file_operations console_fops = {
     .write = console_file_write,
     .read = 0,
+};
+
+struct device console_dev = {
+    .write = console_dev_write,
+    .read  = 0,
+    .name  = "console",
+    .type = DEV_TYPE_PSEUDO,
+    .sync = 0,
 };
 
 struct file console_file = {

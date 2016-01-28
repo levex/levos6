@@ -3,10 +3,43 @@
 
 int sched_ticks = 0;
 
-void __printk_emit(char c)
+static struct tty *printk_tty = 0;
+
+
+void __printk_emit_notty(char c)
 {
     if (c)
         console_send(c);
+}
+
+void __printk_emit_tty(char c)
+{
+    struct device *dev;
+
+    if (!printk_tty) {
+        __printk_emit_notty('b');
+        return;
+    }
+
+    printk_tty->output->write(printk_tty->output, &c, 1, 0);
+}
+
+void (*__printk_emitter) (char) = __printk_emit_notty;
+
+void __printk_emit(char c)
+{
+    (* __printk_emitter) (c);
+}
+
+/* SMP racecondition */
+void printk_switch_tty(int ctty)
+{
+    struct tty *tty = get_tty(ctty);
+
+    tty_set_output(tty, &console_dev);
+    printk_tty = tty;
+    __printk_emitter = __printk_emit_tty;
+
 }
 
 void printk_emit(char *s)

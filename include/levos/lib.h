@@ -14,5 +14,7 @@ extern void itoa(unsigned i,unsigned base,char* buf);
 
 extern int call_syscall(int, int, int, int);
 
+extern void printk_switch_tty(int ctty);
+
 
 #endif /* __LEVOS_LIB_H */

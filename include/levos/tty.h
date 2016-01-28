@@ -13,6 +13,9 @@ extern int tty_init();
 
 extern void tty_set_default_output(struct device *);
 
+
+extern struct tty *get_tty(int i);
+
 struct tty {
     int tty_id;
     /* where our input comes from */
@@ -25,6 +28,8 @@ struct tty {
     uint8_t *outputbuf;
     /* internal device representation of the tty */
     struct device *selfdevice;
+
+    int buffered;
 } __attribute__((packed));
 
 struct tty_private {
@@ -33,5 +38,7 @@ struct tty_private {
     int num_consoles;
     int idx_active_console;
 } __attribute__((packed));
+
+extern void tty_set_output(struct tty *tty, struct device *out);
 
 #endif /* __LEVOS_TTY_H */

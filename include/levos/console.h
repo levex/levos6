@@ -9,6 +9,7 @@ struct console {
 };
 
 extern struct file console_file;
+extern struct device console_dev;
 
 extern int console_sys_init();
 
