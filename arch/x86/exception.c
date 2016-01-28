@@ -98,8 +98,8 @@ void exc_pf(int errc)
     uint32_t cr2 = 0;
     asm volatile("mov %%cr0, %%eax":"=a"(cr2));
     printk("Process: %s\n", comm);
-    printk("Linear address: 0x%x\n", cr2);
-    printk("Error code: 0x%x\n", errc);
+    printk("Linear address: 0x%x\n", errc);
+    printk("Error code: 0x%x\n", cr2);
     printk("------[ End  Trace ]------\n");
     if (strcmp(comm, "kernel") == 0)
         resolved = 0;
