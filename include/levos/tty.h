@@ -24,9 +24,11 @@ struct tty {
     struct device *output;
     /* input buffer */
     uint8_t *inputbuf;
+    /* current index of inputbuf */
     int inputidx;
     /* output buffer */
     uint8_t *outputbuf;
+    /* current index of outputbuf */
     int outputidx;
     /* internal device representation of the tty */
     struct device *selfdevice;
