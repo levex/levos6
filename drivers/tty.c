@@ -93,6 +93,9 @@ int tty_input_write(struct device *dev, const void *buf, size_t count, size_t po
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
 
+    if (!tty->input)
+        return -ESRCH;
+
     if (tty->inputidx + count > TTY_IN_BUFSIZE)
         printk("tty%d is out of space in its input buffer", tty->tty_id);
 
@@ -108,6 +111,9 @@ int tty_output_write(struct device *dev, const void *buf, size_t count, size_t p
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
     int i;
+
+    if (!tty->output)
+        return -ESRCH;
 
     if (tty->outputidx + count > TTY_OUT_BUFSIZE)
         tty_flush_output(tty);
@@ -133,6 +139,9 @@ int tty_output_read(struct device *dev, void *buf, size_t count, size_t pos)
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
 
+    if (!tty->output)
+        return -ESRCH;
+
     return -ENOSYS;
 }
 
@@ -149,6 +158,9 @@ int tty_flush(struct device *dev)
 {
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
+
+    if (!tty->input)
+        return -ESRCH;
 
     return -ENOSYS;
 }
