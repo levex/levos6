@@ -66,6 +66,11 @@ void tty_set_output(struct tty *tty, struct device *out)
     tty->output = out;
 }
 
+void tty_set_buffered(struct tty *tty, int buf)
+{
+    tty->buffered = buf;
+}
+
 void tty_override_all_defaults()
 {
     struct tty *t;
@@ -76,17 +81,63 @@ void tty_override_all_defaults()
     }
 }
 
+void tty_flush_output(struct tty *tty)
+{
+    tty->output->write(tty->output, tty->outputbuf, tty->outputidx, 0);
+    tty->outputidx = 0;
+}
+
 /* write writes to the input buffer */
-int tty_write(struct device *dev, const void *buf, size_t count, size_t pos)
+int tty_input_write(struct device *dev, const void *buf, size_t count, size_t pos)
 {
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
 
-    return tty->output->write(tty->output, buf, count, pos);
+    if (tty->inputidx + count > TTY_IN_BUFSIZE)
+        printk("tty%d is out of space in its input buffer", tty->tty_id);
+
+    memcpy(&tty->inputbuf[tty->inputidx], (char *) buf, count);
+    tty->inputidx += count;
+
+    return count;
+}
+
+/* write writes to the output buffer */
+int tty_output_write(struct device *dev, const void *buf, size_t count, size_t pos)
+{
+    struct tty_private *priv = dev->priv;
+    struct tty *tty = priv->tty;
+    int i;
+
+    if (tty->outputidx + count > TTY_OUT_BUFSIZE)
+        tty_flush_output(tty);
+
+    for (i = 0; i < count; i ++) {
+        char c = ((char *)buf) [i];
+
+        if (c == '\n')
+            tty_flush_output(tty);
+
+        tty->outputbuf[tty->outputidx ++] = c;
+    }
+
+    if (!tty->buffered)
+        tty_flush_output(tty);
+
+    return count;
 }
 
 /* read reads from the output buffer */
-int tty_read(struct device *dev, void *buf, size_t count, size_t pos)
+int tty_output_read(struct device *dev, void *buf, size_t count, size_t pos)
+{
+    struct tty_private *priv = dev->priv;
+    struct tty *tty = priv->tty;
+
+    return -ENOSYS;
+}
+
+/* read reads from the input buffer */
+int tty_input_read(struct device *dev, void *buf, size_t count, size_t pos)
 {
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
@@ -98,7 +149,6 @@ int tty_flush(struct device *dev)
 {
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
-    tty = tty;
 
     return -ENOSYS;
 }
@@ -131,13 +181,15 @@ struct device *tty_create_device(struct tty *tty)
     }
     memcpy(ptr, string, strlen(string) + 1);
 
+    priv->tty = tty;
+
     /* FIXME: name needs asprintf */
     dev->name  = ptr;
     dev->name[3] += tty->tty_id;
     dev->type  = DEV_TYPE_TTY;
     dev->priv  = priv;
-    dev->write = tty_write;
-    dev->read  = tty_read;
+    dev->write = tty_input_write;
+    dev->read  = tty_output_read;
     dev->sync  = tty_flush;
     dev->fs    = 0;
 
@@ -154,7 +206,9 @@ int tty_init()
         t->input = default_input;
         t->output = default_output;
         t->inputbuf = kmalloc(TTY_IN_BUFSIZE);
+        t->inputidx = 0;
         t->outputbuf = kmalloc(TTY_OUT_BUFSIZE);
+        t->outputidx = 0;
         t->selfdevice = 0;
         t->buffered = 1;
         ttys[i] = t;

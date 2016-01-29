@@ -16,12 +16,12 @@ void __printk_emit_tty(char c)
 {
     struct device *dev;
 
-    if (!printk_tty) {
+    if (!printk_tty || !printk_tty->selfdevice) {
         __printk_emit_notty('b');
         return;
     }
 
-    printk_tty->output->write(printk_tty->output, &c, 1, 0);
+    tty_output_write(printk_tty->selfdevice, &c, 1, 0);
 }
 
 void (*__printk_emitter) (char) = __printk_emit_notty;
@@ -38,6 +38,7 @@ void printk_switch_tty(int ctty)
 
     tty_set_output(tty, &console_dev);
     printk_tty = tty;
+    tty_set_buffered(tty, 0);
     __printk_emitter = __printk_emit_tty;
 
 }

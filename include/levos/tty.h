@@ -24,8 +24,10 @@ struct tty {
     struct device *output;
     /* input buffer */
     uint8_t *inputbuf;
+    int inputidx;
     /* output buffer */
     uint8_t *outputbuf;
+    int outputidx;
     /* internal device representation of the tty */
     struct device *selfdevice;
 
@@ -40,5 +42,7 @@ struct tty_private {
 } __attribute__((packed));
 
 extern void tty_set_output(struct tty *tty, struct device *out);
+extern int tty_output_write(struct device *, const void *, size_t, size_t);
+extern void tty_set_buffered(struct tty *tty, int buf);
 
 #endif /* __LEVOS_TTY_H */
