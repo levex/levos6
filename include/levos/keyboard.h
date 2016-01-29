@@ -3,4 +3,6 @@
 
 extern int keyboard_init();
 
+extern struct device keyboard_dev;
+
 #endif

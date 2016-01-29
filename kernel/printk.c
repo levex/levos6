@@ -5,7 +5,6 @@ int sched_ticks = 0;
 
 static struct tty *printk_tty = 0;
 
-
 void __printk_emit_notty(char c)
 {
     if (c)
@@ -14,13 +13,6 @@ void __printk_emit_notty(char c)
 
 void __printk_emit_tty(char c)
 {
-    struct device *dev;
-
-    if (!printk_tty || !printk_tty->selfdevice) {
-        __printk_emit_notty('b');
-        return;
-    }
-
     tty_output_write(printk_tty->selfdevice, &c, 1, 0);
 }
 
@@ -37,10 +29,12 @@ void printk_switch_tty(int ctty)
     struct tty *tty = get_tty(ctty);
 
     tty_set_output(tty, &console_dev);
-    printk_tty = tty;
+    tty_set_input(tty, &keyboard_dev);
     tty_set_buffered(tty, 0);
-    __printk_emitter = __printk_emit_tty;
 
+    printk_tty = tty;
+
+    __printk_emitter = __printk_emit_tty;
 }
 
 void printk_emit(char *s)
@@ -113,6 +107,7 @@ void printk_ticks()
 {
     int i;
     char str[32] = {0};
+
     vprintk("[", NULL);
     sched_ticks = arch_get_ticks();
     itoa(sched_ticks, 10, str);

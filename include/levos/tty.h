@@ -44,7 +44,9 @@ struct tty_private {
 } __attribute__((packed));
 
 extern void tty_set_output(struct tty *tty, struct device *out);
+extern void tty_set_input(struct tty *tty, struct device *in);
 extern int tty_output_write(struct device *, const void *, size_t, size_t);
+extern int tty_input_read(struct device *, void *, size_t, size_t);
 extern void tty_set_buffered(struct tty *tty, int buf);
 
 #endif /* __LEVOS_TTY_H */

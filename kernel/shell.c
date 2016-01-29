@@ -17,6 +17,8 @@ void show_prompt()
     _printk("LevOS$ ");
 }
 
+static struct tty *shell_tty;
+
 extern char keyboard_get_key(void);
 extern void __printk_emit(char);
 char *grab_input()
@@ -27,15 +29,16 @@ char *grab_input()
     memset(buffer, 0, 512);
 
     while(1) {
-        char c = keyboard_get_key();
-        if (!c) {
+        char cs[] = { 0 };
+        tty_input_read(shell_tty->selfdevice, cs, 1, 0);
+        if (!cs[0]) {
             schedule_noirq();
             continue;
         }
-        if (c == '\n')
+        if (cs[0] == '\n')
             break;
-        buffer[i++] = c;
-        __printk_emit(c);
+        buffer[i++] = cs[0];
+        __printk_emit(cs[0]);
     }
     __printk_emit('\n');
     return buffer;
@@ -204,6 +207,7 @@ void parse_input(char *cmd)
 void kernel_shell_start()
 {
     printk("Starting LevOS debug shell...\n");
+    shell_tty = get_tty(0);
     while (1) {
         show_prompt();
         char *in = grab_input();

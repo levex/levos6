@@ -138,11 +138,23 @@ int tty_output_read(struct device *dev, void *buf, size_t count, size_t pos)
 {
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
+    int i;
 
     if (!tty->output)
         return -ESRCH;
 
-    return -ENOSYS;
+    /* check blocking */
+    if (count > tty->outputidx) {
+        i = tty->outputidx;
+        memcpy(buf, &tty->outputbuf[0], i);
+        tty->outputidx = 0;
+        return i;
+    }
+
+    memcpy(buf, &tty->outputbuf[0], count);
+    tty->outputidx -= count;
+
+    return count;
 }
 
 /* read reads from the input buffer */
@@ -150,8 +162,25 @@ int tty_input_read(struct device *dev, void *buf, size_t count, size_t pos)
 {
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
+    int i;
 
-    return -ENOSYS;
+    if (!tty->input)
+        return -ESRCH;
+
+    /* check blocking */
+    if (count > tty->inputidx) {
+        i = tty->inputidx;
+        memcpy(buf, &tty->inputbuf[0], i);
+        tty->inputidx = 0;
+        /* TODO if blocking is enabled */
+        tty->input->read(tty->input, buf, count - tty->inputidx, 0);
+        return count;
+    }
+
+    memcpy(buf, &tty->inputbuf[0], count);
+    tty->inputidx -= count;
+
+    return count;
 }
 
 int tty_flush(struct device *dev)
@@ -159,10 +188,9 @@ int tty_flush(struct device *dev)
     struct tty_private *priv = dev->priv;
     struct tty *tty = priv->tty;
 
-    if (!tty->input)
-        return -ESRCH;
+    tty_flush_output(tty);
 
-    return -ENOSYS;
+    return 0;
 }
 
 struct device *tty_create_device(struct tty *tty)
