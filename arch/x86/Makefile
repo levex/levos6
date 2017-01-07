@@ -18,3 +18,4 @@ OBJS += arch/x86/irq.o
 OBJS += arch/x86/multiboot.o
 OBJS += arch/x86/pit.o
 OBJS += arch/x86/sched.o
+OBJS += arch/x86/syscall.o

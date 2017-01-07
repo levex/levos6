@@ -126,16 +126,6 @@ DEF_IRQ_HANDLER(0x80, syscall_hub)
     ARCH_SWITCH_CONTEXT();
 }
 
-int call_syscall(int sys, int a1, int a2, int a3)
-{
-    int ret = -ENOSYS;
-
-    asm volatile("int $0x80":"=a"(ret)
-            :"a"(sys), "b"(a1), "c"(a2), "d"(a3));
-
-    return ret;
-}
-
 int syscall_init()
 {
     for (int i = 0; i < 256; i++)

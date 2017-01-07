@@ -222,9 +222,8 @@ void kinit_task()
 {
     int ret;
     printk("kinit: setting up userspace\n");
-    asm volatile("mov $0x00, %%eax\n"
-            "int $0x80\n"
-            "mov %%eax, %0":"=r"(ret)::"eax");
+
+    ret = call_syscall(0, 0, 0, 0);
     if (ret == -ENOSYS)
         printk("kinit: system calls are working!\n");
     else panic("System calls are broken!\n");
