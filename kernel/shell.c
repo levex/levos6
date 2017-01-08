@@ -135,10 +135,10 @@ void cmd_exit()
 
 static int __i_ = 1000;
 static void __cmd_testmt_1() { while (__i_ -= 100 > 0) _printk("%d\n", __i_);
-        asm volatile("int $0x80"::"a"(1));}
+        call_syscall(1, 0, 0, 0);}
 static void __cmd_testmt_2() { while (__i_ ++ < 1000) { _printk("%d\n", __i_);
         if (!(__i_ % 100)) schedule_noirq(); }
-        asm volatile("int $0x80"::"a"(1));}
+        call_syscall(1, 0, 0, 0);}
 
 void cmd_testmt()
 {
