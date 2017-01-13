@@ -21,8 +21,6 @@ struct filesystem *__get__fs()
 
 struct filesystem *ext2_mount(struct device *dev)
 {
-    printk("%s: dev %s\n", __func__, dev->name);
-
     if (dev->type != DEV_TYPE_BLK)
         return (void *) -ENODEV;
 
