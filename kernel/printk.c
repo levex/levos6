@@ -9,11 +9,15 @@ void __printk_emit_notty(char c)
 {
     if (c)
         console_send(c);
+    if (c == '\n')
+        console_send('\r');
 }
 
 void __printk_emit_tty(char c)
 {
     tty_output_write(printk_tty->selfdevice, &c, 1, 0);
+    if (c == '\n')
+        __printk_emit_tty('\r');
 }
 
 void (*__printk_emitter) (char) = __printk_emit_notty;
