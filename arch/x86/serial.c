@@ -2,14 +2,43 @@
 
 #define SERIAL_PORT 0x3F8
 
-void serial_out(int o, uint8_t d)
+static void serial_out(int o, uint8_t d)
 {
     outportb(SERIAL_PORT + o, d);
 }
 
-int serial_is_ready()
+static int serial_is_ready_to_send()
 {
     return inportb(SERIAL_PORT + 5) & 0x20;
+}
+
+static int serial_has_recv()
+{
+    return inportb(SERIAL_PORT + 5) & (1 << 0);
+}
+
+void serial_out_data(uint8_t d)
+{
+    while (!serial_is_ready_to_send())
+        ;
+
+    serial_out(0, d);
+}
+
+uint8_t serial_read_data()
+{
+    while (!serial_has_recv())
+        ;
+
+    return inportb(SERIAL_PORT + 0);
+}
+
+uint8_t serial_try_read_data()
+{
+    if (!serial_has_recv())
+        return 0;
+
+    return inportb(SERIAL_PORT + 0);
 }
 
 int serial_write(struct device *dev, char *buf, size_t count, size_t pos)
@@ -17,14 +46,31 @@ int serial_write(struct device *dev, char *buf, size_t count, size_t pos)
     int i;
 
     for (i = 0; i < count; i++)
-        serial_out(0, buf[i]);
+        serial_out_data(buf[i]);
+
+    return i;
+}
+
+int serial_read(struct device *dev, char *buf, size_t count, size_t pos)
+{
+    int i;
+
+    for (i = 0; i < count; i++) {
+        uint8_t val = serial_try_read_data();
+
+        if (!val)
+            break;
+
+        buf[i] = val;
+    }
 
     return i;
 }
 
 struct device serial_dev = {
     .name = "stty0",
-    .write = (void *)serial_write,
+    .write = (void *) serial_write,
+    .read = (void *) serial_read,
 };
 
 struct console serial_con = {
