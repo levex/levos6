@@ -8,8 +8,8 @@ struct thread;
 struct process {
     char *comm;
     int pid;
-    struct thread *main_thread;
     int no_threads;
+    struct thread **threads;
 
     struct file *file_table[128];
     /* 

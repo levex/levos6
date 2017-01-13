@@ -47,24 +47,27 @@ int sched_add_process(struct process *p)
 
     sched_desync();
     int i;
-    for (i = 0; i < THREAD_QUEUE_SIZE; i++) {
-        if (!thread_queue[i]) {
-            thread_queue[i] = p->main_thread;
-            break;
+    for (int j = 0; j < p->no_threads; j ++)
+        for (i = 0; i < THREAD_QUEUE_SIZE; i++) {
+            if (!thread_queue[i]) {
+                thread_queue[i] = p->threads[j];
+                break;
+            }
         }
-    }
     sched_current_processes ++;
     sched_current_threads += p->no_threads;
     printk("sched: process \"%s\" added as PID %d (proc_queue_pos=%d)\n",
         p->comm, p->pid, i);
-    p->main_thread->state = THREAD_READY;
+    for (int j = 0; j < p->no_threads; j ++)
+        p->threads[j]->state = THREAD_READY;
     sched_sync();
     return 0;
 }
 
 int sched_mark_zombie(struct process *p)
 {
-    p->main_thread->state = THREAD_ZOMBIE;
+    for (int i = 0; i < p->no_threads; i ++)
+        p->threads[i]->state = THREAD_ZOMBIE;
     return 0;
 }
 
@@ -144,7 +147,7 @@ void sched_make_filetable(struct process *p)
 
 struct process *sched_mk_process(char *comm, uint32_t entry)
 {
-    struct thread *t;
+    struct thread *t, **threads;
     struct process *p;
 
     if (!comm || !entry)
@@ -158,23 +161,29 @@ struct process *sched_mk_process(char *comm, uint32_t entry)
     if (!t)
         return 0;
 
+    threads = kmalloc(sizeof(struct thread *) * 1);
+    if (!threads)
+        return 0;
+
     p->comm = comm;
     p->pid = global_pid ++;
-    p->main_thread = t;
-    p->main_thread->owner = p;
-    p->main_thread->time_used = 0;
-    p->main_thread->state = THREAD_NULL;
-    arch_sched_mk_initial_regs(&p->main_thread->r);
+    p->no_threads = 1;
+    p->threads = threads;
+    p->threads[0] = t;
+    p->threads[0]->owner = p;
+    p->threads[0]->time_used = 0;
+    p->threads[0]->state = THREAD_NULL;
+    arch_sched_mk_initial_regs(&p->threads[0]->r);
     arch_sched_make_address_space(p);
-    INS_PTR(&p->main_thread->r) = entry;
-    int r = sched_create_stack(p->main_thread);
+    INS_PTR(&p->threads[0]->r) = entry;
+    int r = sched_create_stack(p->threads[0]);
     if (r) {
         new_free(p);
         return 0;
     }
     sched_make_filetable(p);
     printk("sched: newproc: IP: 0x%x SP: 0x%x\n",
-                INS_PTR(&p->main_thread->r), STACK_PTR(&p->main_thread->r));
+                INS_PTR(&p->threads[0]->r), STACK_PTR(&p->threads[0]->r));
 
     return p;
 }
@@ -197,8 +206,9 @@ int sched_destroy_pid(int pid)
         return -EINVAL;
 
     /* a running process cannot be destroyed */
-    if (p->main_thread->state == THREAD_RUNNING)
-        return -EAGAIN;
+    for (int i = 0; i < p->no_threads; i ++)
+        if (p->threads[i]->state == THREAD_RUNNING)
+            return -EAGAIN;
 
     return sched_destroy_process(p);
 }
@@ -273,7 +283,7 @@ void sched_start_idle()
     DISABLE_IRQ();
     struct process *idle = sched_mk_process("idle", (uintptr_t) idle_task);
     sched_add_process(idle);
-    current = idle->main_thread;
+    current = idle->threads[0];
     current_process = idle;
 
     struct process *kinit = sched_mk_process("init", (uintptr_t) kinit_task);
