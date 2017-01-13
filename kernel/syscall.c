@@ -9,8 +9,8 @@ int syscall_null(struct pt_regs *r)
 
 int syscall_exit(struct pt_regs *r)
 {
-    printk("pid %d: Bye cruel world!\n", current->pid);
-    sched_rm_process(current);
+    printk("pid %d: Bye cruel world!\n", current->owner->pid);
+    sched_rm_process(current->owner);
     return 0x13371337;
 }
 
@@ -21,7 +21,7 @@ int syscall_write(struct pt_regs *r)
     size_t count = SYSCALL_ARG3(r);
 
     /* FIXME: check out of bounds */
-    struct file *fp = current->file_table[fd];
+    struct file *fp = current->owner->file_table[fd];
 
     if (!fp)
         return -EBADF;
@@ -47,8 +47,8 @@ int syscall_open(struct pt_regs *r)
     filp = vfs_open(path);
 
     for (int i = 3; i < 128; i++) {
-        if (current->file_table[i] == 0) {
-            current->file_table[i] = filp;
+        if (current->owner->file_table[i] == 0) {
+            current->owner->file_table[i] = filp;
             return i;
         }
     }
@@ -63,7 +63,7 @@ int syscall_read(struct pt_regs *r)
     size_t size = SYSCALL_ARG3(r);
     struct file *filp;
 
-    filp = current->file_table[fd];
+    filp = current->owner->file_table[fd];
     if (filp == 0)
         return -EBADF;
 
@@ -74,11 +74,11 @@ int syscall_close(struct pt_regs *r)
 {
     int fd = SYSCALL_ARG1(r);
 
-    if (current->file_table[fd] == 0)
+    if (current->owner->file_table[fd] == 0)
         return -EBADF;
 
     /* FIXME free structures */
-    current->file_table[fd] = 0;
+    current->owner->file_table[fd] = 0;
 
     return 0;
 }
@@ -115,7 +115,7 @@ DEF_IRQ_HANDLER(0x80, syscall_hub)
     int (*f)(struct pt_regs *);
 
     printk("Process \"%s\" called system call %d\n",
-        current->comm, SYSCALL_NUMBER(r));
+        current->owner->comm, SYSCALL_NUMBER(r));
 
     f = syscalls[SYSCALL_NUMBER(r)];
     if (!f)

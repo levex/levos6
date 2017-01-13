@@ -3,16 +3,15 @@
 
 #include <levos/vfs.h>
 
+struct thread;
+
 struct process {
     char *comm;
     int pid;
-    int time_used;
-    int state;
+    struct thread *main_thread;
+    int no_threads;
 
     struct file *file_table[128];
-
-    /* Architecture-specific */
-    struct pt_regs r;
     /* 
      * This, ladies and gentleman, is the definition of "ugly hack".
      * (IOW, DON'T MODIFY OR LET THE AUTHOR DIE AND/OR LEAVE)
@@ -20,17 +19,29 @@ struct process {
     ARCH_PROCESS_FIELDS;
 };
 
-#define PROC_QUEUE_SIZE 32
+struct thread {
+    int tid;
+    int state;
+    int time_used;
 
-extern struct process *process_queue[];
-extern struct process *current;
+    struct process *owner;
 
-#define PROCESS_NULL         0 /* process was never in sched queue */
-#define PROCESS_RUNNING      1 /* process is running at the moment */
-#define PROCESS_PREEMPTED    2 /* process was preempted and waits for its time */
-#define PROCESS_READY        3 /* process is ready to scheduled to for the first time */
-#define PROCESS_ZOMBIE       4 /* process was killed and awaits removal from queue */
-#define PROCESS_REMOVED      5 /* process is no longer is sched queue */
+    /* Architecture-specific */
+    struct pt_regs r;
+};
+
+#define THREAD_QUEUE_SIZE 32
+
+extern struct thread *thread_queue[];
+struct process *current_process;
+struct thread *current;
+
+#define THREAD_NULL         0 /* thread was never in sched queue */
+#define THREAD_RUNNING      1 /* thread is running at the moment */
+#define THREAD_PREEMPTED    2 /* thread was preempted and waits for its time */
+#define THREAD_READY        3 /* thread is ready to scheduled to for the first time */
+#define THREAD_ZOMBIE       4 /* thread was killed and awaits removal from queue */
+#define THREAD_REMOVED      5 /* thread is no longer is sched queue */
 
 
 #define MAX_PROC_TIME 10
@@ -49,7 +60,5 @@ extern struct process *sched_mk_process(char *comm, uint32_t entry);
 extern int sched_rm_process(struct process *);
 
 extern void sched_schedule();
-
-extern struct process *current;
 
 #endif /* __SCHED_H */

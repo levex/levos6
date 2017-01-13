@@ -47,13 +47,13 @@ char *grab_input()
 void cmd_ps()
 {
     _printk("NAME [PID] extra\n");
-    for (int i = 0; i < PROC_QUEUE_SIZE; i++) {
-        struct process *p = process_queue[i];
+    for (int i = 0; i < THREAD_QUEUE_SIZE; i++) {
+        struct thread *p = thread_queue[i];
 
         if (!p)
             continue;
 
-        _printk("%s [%d] %s\n", p->comm, p->pid,
+        _printk("%s [%d] %s\n", p->owner->comm, p->owner->pid,
                 current == p ? "[current]" : "");
     }
 }
@@ -166,7 +166,7 @@ void cmd_elf(char *arg)
         return;
     }
 
-    fp = current->file_table[fd];
+    fp = current->owner->file_table[fd];
     isElf = elf_probe(fp);
     _printk("file(%d) is %sELF\n", fd, isElf ? "" : "not ");
     if (!isElf) {

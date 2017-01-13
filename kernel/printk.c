@@ -27,6 +27,8 @@ void __printk_emit(char c)
     (* __printk_emitter) (c);
 }
 
+extern struct device serial_dev;
+
 /* SMP racecondition */
 void printk_switch_tty(int ctty)
 {
@@ -34,6 +36,7 @@ void printk_switch_tty(int ctty)
 
     tty_set_output(tty, &console_dev);
     tty_set_input(tty, &keyboard_dev);
+    //tty_set_input(tty, &serial_dev);
     tty_set_buffered(tty, 0);
 
     printk_tty = tty;

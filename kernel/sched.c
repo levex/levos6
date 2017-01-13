@@ -1,25 +1,28 @@
 #include <levos/levos.h>
 
-struct process *process_queue[PROC_QUEUE_SIZE];
+struct thread *thread_queue[THREAD_QUEUE_SIZE];
 
 int sched_next = 0;
 
 int sched_current_processes = 0;
+int sched_current_threads = 0;
 
 int can_schedule = 0;
 int sched_online = 0;
 
 int global_pid = 0;
 
-struct process *current = 0;
+struct process *current_process = 0;
+struct thread *current = 0;
 
 int sched_init()
 {
     printk("sched: beta version\n");
 
-    memset(process_queue, 0, sizeof(struct process *) * PROC_QUEUE_SIZE);
-    sched_current_processes = 0;
+    memset(thread_queue, 0, sizeof(struct thread *) * THREAD_QUEUE_SIZE);
+    sched_current_threads = 0;
     current = 0;
+    current_process = 0;
     return 0;
 }
 
@@ -39,28 +42,29 @@ int sched_add_process(struct process *p)
     if (!p)
         return -EINVAL;
 
-    if (sched_current_processes >= PROC_QUEUE_SIZE)
+    if (sched_current_threads + p->no_threads >= THREAD_QUEUE_SIZE)
         return -ENOSPC;
 
     sched_desync();
     int i;
-    for (i = 0; i < PROC_QUEUE_SIZE; i++) {
-        if (!process_queue[i]) {
-            process_queue[i] = p;
+    for (i = 0; i < THREAD_QUEUE_SIZE; i++) {
+        if (!thread_queue[i]) {
+            thread_queue[i] = p->main_thread;
             break;
         }
     }
     sched_current_processes ++;
+    sched_current_threads += p->no_threads;
     printk("sched: process \"%s\" added as PID %d (proc_queue_pos=%d)\n",
         p->comm, p->pid, i);
-    p->state = PROCESS_READY;
+    p->main_thread->state = THREAD_READY;
     sched_sync();
     return 0;
 }
 
 int sched_mark_zombie(struct process *p)
 {
-    p->state = PROCESS_ZOMBIE;
+    p->main_thread->state = THREAD_ZOMBIE;
     return 0;
 }
 
@@ -83,17 +87,17 @@ int sched_rm_process(struct process *p)
     if (!p)
         return -EINVAL;
 
-    if (p == current) {
-        if (current->pid == 1)
+    if (p == current_process) {
+        if (current->owner->pid == 1)
             panic("Attempted to kill init process!\n");
-        sched_mark_zombie(current);
+        sched_mark_zombie(current->owner);
         schedule_noirq();
     }
 
-    for (int i = 0; i < PROC_QUEUE_SIZE; i++) {
-        if (process_queue[i]->pid == p->pid) {
-            process_queue[i] = 0;
-            success = 1;
+    for (int i = 0; i < THREAD_QUEUE_SIZE; i++) {
+        if (thread_queue[i]->owner->pid == p->pid) {
+            success = thread_queue[i]->owner->no_threads;
+            thread_queue[i] = 0;
             break;
         }
     }
@@ -102,13 +106,14 @@ int sched_rm_process(struct process *p)
         return -EINVAL;
 
     sched_current_processes --;
+    sched_current_threads -= success;
 
     return sched_destroy_process(p);
 }
 
-int sched_create_stack(struct process *p)
+int sched_create_stack(struct thread *t)
 {
-    if (!p)
+    if (!t)
         return -EINVAL;
 
     /* grab a new page in userspace */
@@ -119,7 +124,7 @@ int sched_create_stack(struct process *p)
     memset((void *) page_addr, 0, 4096);
     uint32_t *s = (uint32_t *)(page_addr + 4096);
 
-    PROCESS_STACK_SET(p, (uintptr_t) s);
+    THREAD_STACK_SET(t, (uintptr_t) s);
 
     return 0;
 }
@@ -130,6 +135,7 @@ void sched_make_filetable(struct process *p)
 
     /* fd 0 is stdin */
     /* FIXME */
+    ft[0] = 0;
 
     /* fd 1 is stdout, this will be kmsg atm */
     ft[1] = &console_file;
@@ -138,39 +144,48 @@ void sched_make_filetable(struct process *p)
 
 struct process *sched_mk_process(char *comm, uint32_t entry)
 {
+    struct thread *t;
+    struct process *p;
+
     if (!comm || !entry)
         return 0;
 
-    struct process *p = kmalloc(sizeof(*p));
+    p = kmalloc(sizeof(*p));
     if (!p)
         return 0;
 
+    t = kmalloc(sizeof(*t));
+    if (!t)
+        return 0;
+
     p->comm = comm;
-    p->time_used = 0;
     p->pid = global_pid ++;
-    p->state = PROCESS_NULL;
-    arch_sched_mk_initial_regs(&p->r);
+    p->main_thread = t;
+    p->main_thread->owner = p;
+    p->main_thread->time_used = 0;
+    p->main_thread->state = THREAD_NULL;
+    arch_sched_mk_initial_regs(&p->main_thread->r);
     arch_sched_make_address_space(p);
-    INS_PTR(&p->r) = entry;
-    int r = sched_create_stack(p);
+    INS_PTR(&p->main_thread->r) = entry;
+    int r = sched_create_stack(p->main_thread);
     if (r) {
         new_free(p);
         return 0;
     }
     sched_make_filetable(p);
     printk("sched: newproc: IP: 0x%x SP: 0x%x\n",
-                INS_PTR(&p->r), STACK_PTR(&p->r));
+                INS_PTR(&p->main_thread->r), STACK_PTR(&p->main_thread->r));
 
     return p;
 }
 
 struct process *get_process_by_pid(int pid)
 {
-    for (int i = 0; i < PROC_QUEUE_SIZE; i++) {
-        if (!process_queue[i])
+    for (int i = 0; i < THREAD_QUEUE_SIZE; i++) {
+        if (!thread_queue[i])
             continue;
-        if (process_queue[i]->pid == pid)
-            return process_queue[i];
+        if (thread_queue[i]->owner->pid == pid)
+            return thread_queue[i]->owner;
     }
     return 0;
 }
@@ -182,26 +197,25 @@ int sched_destroy_pid(int pid)
         return -EINVAL;
 
     /* a running process cannot be destroyed */
-    if (p->state == PROCESS_RUNNING)
+    if (p->main_thread->state == THREAD_RUNNING)
         return -EAGAIN;
 
     return sched_destroy_process(p);
 }
 
-struct process *sched_select()
+struct thread *sched_select()
 {
-    struct process *next;
-
+    struct thread *next;
 
 retry:
-    if (sched_next >= PROC_QUEUE_SIZE)
+    if (sched_next >= THREAD_QUEUE_SIZE)
         sched_next = 0;
 
-    next = process_queue[sched_next];
+    next = thread_queue[sched_next];
     sched_next ++;
-    if (!next || next->state == PROCESS_ZOMBIE
+    if (!next || next->state == THREAD_ZOMBIE 
         /* only to schedule to idle if there are no processes */
-          || (next->pid == 0 && sched_current_processes > 1))
+          || (next->owner->pid == 0 && sched_current_threads > 1))
         goto retry;
 
     return next;
@@ -259,7 +273,8 @@ void sched_start_idle()
     DISABLE_IRQ();
     struct process *idle = sched_mk_process("idle", (uintptr_t) idle_task);
     sched_add_process(idle);
-    current = idle;
+    current = idle->main_thread;
+    current_process = idle;
 
     struct process *kinit = sched_mk_process("init", (uintptr_t) kinit_task);
     sched_add_process(kinit);
@@ -284,8 +299,8 @@ void sched_schedule()
     if (current) {
         struct pt_regs *irq_regs = GRAB_PRE_IRQ_REGS();
 
-        if (current->state == PROCESS_ZOMBIE) {
-            prev = current;
+        if (current->state == THREAD_ZOMBIE) {
+            prev = current->owner;
             goto next;
         }
 
@@ -293,7 +308,7 @@ void sched_schedule()
         if (current->time_used < MAX_PROC_TIME)
             return;
 
-        current->state = PROCESS_PREEMPTED;
+        current->state = THREAD_PREEMPTED;
     } else panic("Scheduler has no current process\n");
 
     /* select next process */
@@ -302,8 +317,8 @@ next:
         sched_destroy_process(prev);
     current = sched_select();
     current->time_used = 0;
-    current->state = PROCESS_RUNNING;
+    current->state = THREAD_RUNNING;
     arch_sched_setup_stack(current);
-    arch_sched_setup_address_space(current);
+    arch_sched_setup_address_space(current->owner);
     ARCH_SWITCH_CONTEXT();
 }

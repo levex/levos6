@@ -22,7 +22,7 @@ void save_pre_irq_regs()
 
 }
 
-void arch_sched_setup_stack(struct process *p)
+void arch_sched_setup_stack(struct thread *p)
 {
     uint32_t *s = (void *) p->r.esp;
     *(--s) = p->r.eflags;

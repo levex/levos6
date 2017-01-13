@@ -48,9 +48,9 @@ struct pt_regs2 {
                 } while (0);
 
 
-#define PROCESS_STACK_SET(p, a) do { (&((p)->r))->esp = a; \
+#define THREAD_STACK_SET(p, a) do { (&((p)->r))->esp = a; \
                     (&((p)->r))->ebp = a; } while(0);
-#define PROCESS_STACK_GET(p) ((p)->r.esp)
+#define THREAD_STACK_GET(p) ((p)->r.esp)
 
 extern struct pt_regs __x86_pre_irq_regs;
 #define GRAB_PRE_IRQ_REGS()  (&__x86_pre_irq_regs)
