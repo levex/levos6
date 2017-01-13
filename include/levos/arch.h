@@ -40,4 +40,5 @@ uint16_t inportw(uint16_t p);
 
 void outportb(uint16_t p, uint8_t v);
 
+void arch_prep_exit_irq();
 #endif

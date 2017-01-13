@@ -33,7 +33,6 @@ struct thread {
 #define THREAD_QUEUE_SIZE 32
 
 extern struct thread *thread_queue[];
-struct process *current_process;
 struct thread *current;
 
 #define THREAD_NULL         0 /* thread was never in sched queue */

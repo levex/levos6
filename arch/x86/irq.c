@@ -33,6 +33,11 @@ void send_eoi()
     return;
 }
 
+void arch_prep_exit_irq()
+{
+    send_eoi();
+}
+
 int irq_init()
 {
     irq_remap();

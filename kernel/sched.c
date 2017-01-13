@@ -12,7 +12,6 @@ int sched_online = 0;
 
 int global_pid = 0;
 
-struct process *current_process = 0;
 struct thread *current = 0;
 
 int sched_init()
@@ -22,7 +21,6 @@ int sched_init()
     memset(thread_queue, 0, sizeof(struct thread *) * THREAD_QUEUE_SIZE);
     sched_current_threads = 0;
     current = 0;
-    current_process = 0;
     return 0;
 }
 
@@ -90,7 +88,7 @@ int sched_rm_process(struct process *p)
     if (!p)
         return -EINVAL;
 
-    if (p == current_process) {
+    if (p->pid == current->owner->pid) {
         if (current->owner->pid == 1)
             panic("Attempted to kill init process!\n");
         sched_mark_zombie(current->owner);
@@ -99,9 +97,8 @@ int sched_rm_process(struct process *p)
 
     for (int i = 0; i < THREAD_QUEUE_SIZE; i++) {
         if (thread_queue[i]->owner->pid == p->pid) {
-            success = thread_queue[i]->owner->no_threads;
             thread_queue[i] = 0;
-            break;
+            success ++;
         }
     }
 
@@ -284,7 +281,6 @@ void sched_start_idle()
     struct process *idle = sched_mk_process("idle", (uintptr_t) idle_task);
     sched_add_process(idle);
     current = idle->threads[0];
-    current_process = idle;
 
     struct process *kinit = sched_mk_process("init", (uintptr_t) kinit_task);
     sched_add_process(kinit);
@@ -298,7 +294,7 @@ void sched_start_idle()
 extern uint32_t pre_irq_esp;
 void sched_schedule()
 {
-    struct process *prev = 0;    
+    struct thread *prev = 0;
 
     if (!can_schedule)
         return;
@@ -310,7 +306,7 @@ void sched_schedule()
         struct pt_regs *irq_regs = GRAB_PRE_IRQ_REGS();
 
         if (current->state == THREAD_ZOMBIE) {
-            prev = current->owner;
+            prev = current;
             goto next;
         }
 
@@ -324,11 +320,12 @@ void sched_schedule()
     /* select next process */
 next:
     if (prev)
-        sched_destroy_process(prev);
+        sched_destroy_process(prev->owner);
     current = sched_select();
     current->time_used = 0;
     current->state = THREAD_RUNNING;
     arch_sched_setup_stack(current);
     arch_sched_setup_address_space(current->owner);
+    arch_prep_exit_irq();
     ARCH_SWITCH_CONTEXT();
 }
