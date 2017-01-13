@@ -86,6 +86,8 @@ int x86_serial_init() {
     serial_out(2, 0xC7);
     serial_out(4, 0x0B);
 
+    tty_set_default_input(&serial_dev);
+
     device_register(&serial_dev);
     console_register(&serial_con);
     return 0;
