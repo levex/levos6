@@ -76,9 +76,10 @@ extern int kernel_base;
 /* this is called by kinit (pid1) */
 int main_init() {
     int retval = 0;
-    asm volatile("int $0x80"
+    retval = call_syscall(4, 1, (int) "Hello, world!\n", 14);
+    /* asm volatile("int $0x80"
             :"=r"(retval)
-            :"a"(4),"b"(1),"c"("Hello, world!\n"),"d"(14));
+            :"a"(4),"b"(1),"c"("Hello, world!\n"),"d"(14)); */
 
     /* fire up kernel shell */
     kernel_shell_start();
